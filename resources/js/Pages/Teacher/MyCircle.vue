@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import EmptyState from '@/Components/EmptyState.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import type { Circle } from '@/Types';
@@ -42,7 +42,12 @@ defineProps<{
                         class="flex items-center justify-between px-4 py-3 text-sm"
                     >
                         <span class="font-medium text-gray-800">{{ student.user?.name }}</span>
-                        <StatusBadge :status="student.status" />
+                        <div class="flex items-center gap-3">
+                            <StatusBadge :status="student.status" />
+                            <Link :href="route('students.show', student.id)" class="font-medium text-teal-600 hover:underline">
+                                عرض ملف الطالب
+                            </Link>
+                        </div>
                     </li>
                 </ul>
             </div>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import FormSelect from '@/Components/FormSelect.vue';
-import FormInput from '@/Components/FormInput.vue';
 import { SURAHS } from '@/Data/surahs';
 
 export interface QuranRange {
@@ -27,26 +26,54 @@ const selectedSurah = computed(() =>
     SURAHS.find((surah) => surah.number === props.modelValue.surahNumber),
 );
 
-const ayahToError = computed(() => {
-    if (!selectedSurah.value || !props.modelValue.ayahTo) {
-        return '';
-    }
+// أرقام الآيات المتاحة للسورة المختارة (1..ayahCount).
+const ayahOptions = computed(() => {
+    if (!selectedSurah.value) return [];
 
-    if (props.modelValue.ayahTo > selectedSurah.value.ayahCount) {
-        return `أقصى عدد آيات في هذه السورة هو ${selectedSurah.value.ayahCount}`;
-    }
-
-    if (props.modelValue.ayahFrom && props.modelValue.ayahTo < props.modelValue.ayahFrom) {
-        return 'يجب أن تكون آية النهاية بعد آية البداية';
-    }
-
-    return '';
+    return Array.from({ length: selectedSurah.value.ayahCount }, (_, index) => ({
+        value: index + 1,
+        label: `الآية ${index + 1}`,
+    }));
 });
 
-function updateField(field: keyof QuranRange, value: string): void {
+// قائمة "إلى" تقتصر على الآيات >= "من" لضمان نطاق سليم دائماً.
+const ayahToOptions = computed(() => {
+    const from = props.modelValue.ayahFrom;
+    if (from === null) return ayahOptions.value;
+
+    return ayahOptions.value.filter((option) => option.value >= from);
+});
+
+function onSurahChange(value: string): void {
+    // عند تغيير السورة: تصفير نطاق الآيات لأن حدودها تغيّرت.
+    emit('update:modelValue', {
+        surahNumber: value === '' ? null : Number(value),
+        ayahFrom: null,
+        ayahTo: null,
+    });
+}
+
+function onAyahFromChange(value: string): void {
+    const ayahFrom = value === '' ? null : Number(value);
+
+    // إذا كانت آية النهاية السابقة قبل البداية الجديدة، صفّرها لإجبار إعادة الاختيار.
+    const ayahTo = props.modelValue.ayahTo !== null
+        && ayahFrom !== null
+        && props.modelValue.ayahTo >= ayahFrom
+        ? props.modelValue.ayahTo
+        : null;
+
     emit('update:modelValue', {
         ...props.modelValue,
-        [field]: value === '' ? null : Number(value),
+        ayahFrom,
+        ayahTo,
+    });
+}
+
+function onAyahToChange(value: string): void {
+    emit('update:modelValue', {
+        ...props.modelValue,
+        ayahTo: value === '' ? null : Number(value),
     });
 }
 </script>
@@ -59,29 +86,33 @@ function updateField(field: keyof QuranRange, value: string): void {
             :model-value="modelValue.surahNumber"
             :options="surahOptions"
             required
-            @update:model-value="updateField('surahNumber', $event)"
+            @update:model-value="onSurahChange($event)"
         />
         <div class="grid grid-cols-2 gap-3">
-            <FormInput
+            <FormSelect
                 id="ayah-from"
-                type="number"
                 label="من آية"
                 :model-value="modelValue.ayahFrom"
+                :options="ayahOptions"
+                :disabled="!selectedSurah"
                 required
-                @update:model-value="updateField('ayahFrom', $event)"
+                @update:model-value="onAyahFromChange($event)"
             />
-            <FormInput
+            <FormSelect
                 id="ayah-to"
-                type="number"
                 label="إلى آية"
                 :model-value="modelValue.ayahTo"
-                :error="ayahToError"
+                :options="ayahToOptions"
+                :disabled="modelValue.ayahFrom === null"
                 required
-                @update:model-value="updateField('ayahTo', $event)"
+                @update:model-value="onAyahToChange($event)"
             />
         </div>
         <p v-if="selectedSurah" class="text-xs text-gray-500">
             عدد آيات {{ selectedSurah.nameArabic }}: {{ selectedSurah.ayahCount }}
+        </p>
+        <p v-else class="text-xs text-gray-400">
+            اختر السورة أولاً لعرض أرقام الآيات المتاحة.
         </p>
     </div>
 </template>

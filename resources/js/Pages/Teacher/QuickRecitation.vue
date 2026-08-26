@@ -44,6 +44,17 @@ const ratingLabels: Record<string, string> = {
     needs_work: 'يحتاج إلى تحسين',
 };
 
+const NOTE_OTHER = 'اخرى';
+
+const notesOptions = [
+    { value: 'حافظ', label: '1: حافظ' },
+    { value: 'حافظ ولديه اخطاء', label: '2: حافظ ولديه اخطاء' },
+    { value: 'مخارج الحروف غير سليمه', label: '3: مخارج الحروف غير سليمه' },
+    { value: 'غير حافظ', label: '4: غير حافظ' },
+    { value: 'لم يحفظ الدرس', label: '5: لم يحفظ الدرس' },
+    { value: NOTE_OTHER, label: '6: اخرى' },
+];
+
 const studentOptions = props.students.map((s) => ({ value: s.id, label: s.user?.name ?? `طالب #${s.id}` }));
 
 const processing = ref(false);
@@ -55,7 +66,8 @@ const form = reactive({
     student_id: '' as string | number,
     type: 'new',
     rating: '',
-    notes: '',
+    notesOption: '',
+    notesCustom: '',
 });
 
 const quranRange = reactive<QuranRange>({
@@ -78,7 +90,8 @@ function resetForm(): void {
     form.student_id = '';
     form.type = 'new';
     form.rating = '';
-    form.notes = '';
+    form.notesOption = '';
+    form.notesCustom = '';
     quranRange.surahNumber = null;
     quranRange.ayahFrom = null;
     quranRange.ayahTo = null;
@@ -93,8 +106,18 @@ async function refreshPendingCount(): Promise<void> {
 async function submit(): Promise<void> {
     clearErrors();
 
-    if (!form.student_id || !quranRange.surahNumber || !quranRange.ayahFrom || !quranRange.ayahTo) {
+    if (!form.student_id || !form.type || !quranRange.surahNumber || !quranRange.ayahFrom || !quranRange.ayahTo || !form.rating || !form.notesOption) {
         toast.error('يرجى إكمال جميع الحقول المطلوبة.');
+        return;
+    }
+
+    // الملاحظة: نص جاهز من القائمة، أو نص مخصص عند اختيار "اخرى".
+    const notes = form.notesOption === NOTE_OTHER
+        ? form.notesCustom.trim()
+        : form.notesOption;
+
+    if (!notes) {
+        toast.error('يرجى كتابة الملاحظة المخصصة.');
         return;
     }
 
@@ -104,8 +127,8 @@ async function submit(): Promise<void> {
         surah_number: quranRange.surahNumber,
         ayah_from: quranRange.ayahFrom,
         ayah_to: quranRange.ayahTo,
-        rating: form.rating || null,
-        notes: form.notes || null,
+        rating: form.rating,
+        notes,
         idempotency_key: generateIdempotencyKey(),
     };
 
@@ -190,8 +213,17 @@ onMounted(async () => {
                     <FormSelect id="recitation-student" v-model="form.student_id" label="الطالب" :options="studentOptions" required :error="errors.student_id" />
                     <FormSelect id="recitation-type" v-model="form.type" label="نوع التسميع" :options="typeOptions" required :error="errors.type" />
                     <QuranRangeSelector :model-value="quranRange" @update:model-value="updateQuranRange" />
-                    <FormSelect id="recitation-rating" v-model="form.rating" label="التقييم" :options="ratingOptions" :error="errors.rating" placeholder="اختياري" />
-                    <FormInput id="recitation-notes" v-model="form.notes" label="ملاحظات" :error="errors.notes" />
+                    <FormSelect id="recitation-rating" v-model="form.rating" label="التقييم" :options="ratingOptions" :error="errors.rating" required placeholder="اختر التقييم" />
+                    <FormSelect id="recitation-notes" v-model="form.notesOption" label="الملاحظات" :options="notesOptions" :error="errors.notes" required placeholder="اختر الملاحظة" />
+                    <FormInput
+                        v-if="form.notesOption === NOTE_OTHER"
+                        id="recitation-notes-custom"
+                        v-model="form.notesCustom"
+                        label="اكتب ملاحظتك الخاصة"
+                        :error="errors.notes"
+                        required
+                        placeholder="اكتب الملاحظة المخصصة..."
+                    />
 
                     <button
                         type="submit"

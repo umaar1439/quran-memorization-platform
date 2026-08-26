@@ -61,6 +61,12 @@ class ValidAyahRange implements ValidationRule
             return;
         }
 
+        if ($ayahFrom > $surah->ayah_count) {
+            $fail("بداية النطاق (ayah_from) تتجاوز عدد آيات السورة ({$surah->ayah_count}).");
+
+            return;
+        }
+
         if ($ayahTo > $surah->ayah_count) {
             $fail("نطاق الآيات يتجاوز عدد آيات السورة ({$surah->ayah_count}).");
         }

@@ -16,6 +16,7 @@ use App\Models\StudentGoal;
 use App\Models\StudentProfile;
 use App\Models\StudentTransfer;
 use App\Models\TeacherAttendance;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use App\Policies\AuditLogPolicy;
 use App\Policies\CertificatePolicy;
@@ -31,6 +32,7 @@ use App\Policies\StudentGoalPolicy;
 use App\Policies\StudentProfilePolicy;
 use App\Policies\StudentTransferPolicy;
 use App\Policies\TeacherAttendancePolicy;
+use App\Policies\TeacherProfilePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -48,6 +50,7 @@ class AuthServiceProvider extends ServiceProvider
         Mosque::class => MosquePolicy::class,
         Circle::class => CirclePolicy::class,
         StudentProfile::class => StudentProfilePolicy::class,
+        TeacherProfile::class => TeacherProfilePolicy::class,
         Recitation::class => RecitationPolicy::class,
         TeacherAttendance::class => TeacherAttendancePolicy::class,
         Exam::class => ExamPolicy::class,

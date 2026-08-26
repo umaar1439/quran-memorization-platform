@@ -64,6 +64,8 @@ test('offline sync: resubmitting the same client-generated idempotency_key after
         'surah_number' => 2,
         'ayah_from' => 1,
         'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => $idempotencyKey,
     ];
 
@@ -110,6 +112,8 @@ test('every response carries a valid UUID X-Request-ID header', function () {
         'surah_number' => 1,
         'ayah_from' => 1,
         'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ]);
 

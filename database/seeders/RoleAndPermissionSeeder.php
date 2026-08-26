@@ -18,6 +18,7 @@ class RoleAndPermissionSeeder extends Seeder
      */
     public const PERMISSIONS = [
         'users.view', 'users.create', 'users.update', 'users.delete',
+        'teachers.view', 'teachers.create', 'teachers.update', 'teachers.delete',
         'circles.view', 'circles.manage',
         'students.view', 'students.manage', 'students.transfer',
         'recitations.create', 'recitations.view', 'recitations.update',
@@ -72,6 +73,7 @@ class RoleAndPermissionSeeder extends Seeder
         $roles['org-admin']->syncPermissions(Permission::all());
 
         $roles['supervisor']->syncPermissions([
+            'teachers.view', 'teachers.create', 'teachers.update', 'teachers.delete',
             'circles.view', 'circles.manage',
             'students.view', 'students.manage', 'students.transfer',
             'recitations.view',

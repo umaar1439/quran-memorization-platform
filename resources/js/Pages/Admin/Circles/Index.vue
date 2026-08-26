@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
@@ -149,6 +149,9 @@ function onPageChange(page: number): void {
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex gap-2">
+                        <Link :href="route('admin.circles.show', (row as unknown as Circle).id)" class="text-sm font-medium text-teal-600 hover:underline">
+                            عرض
+                        </Link>
                         <button type="button" class="text-sm font-medium text-teal-600 hover:underline" @click="openEditModal(row as unknown as Circle)">
                             تعديل
                         </button>

@@ -264,6 +264,8 @@ test('stress: many identical sequential requests always return the same recitati
         'surah_number' => 2,
         'ayah_from' => 1,
         'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => $key,
     ];
 

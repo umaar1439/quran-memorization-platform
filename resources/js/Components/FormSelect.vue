@@ -13,6 +13,7 @@ withDefaults(
         required?: boolean;
         placeholder?: string;
         id?: string;
+        disabled?: boolean;
     }>(),
     {
         label: '',
@@ -20,6 +21,7 @@ withDefaults(
         required: false,
         placeholder: 'اختر...',
         id: undefined,
+        disabled: false,
     },
 );
 
@@ -38,8 +40,9 @@ defineEmits<{
             :id="id"
             :value="modelValue ?? ''"
             :required="required"
+            :disabled="disabled"
             class="block min-h-[44px] w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
-            :class="{ 'border-red-500': error }"
+            :class="{ 'border-red-500': error, 'cursor-not-allowed bg-gray-100 text-gray-500': disabled }"
             @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         >
             <option value="" disabled>{{ placeholder }}</option>

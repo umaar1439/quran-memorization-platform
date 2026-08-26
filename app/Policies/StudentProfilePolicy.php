@@ -26,22 +26,23 @@ class StudentProfilePolicy
             return false;
         }
 
-        if ($user->hasRole('super-admin') || $user->hasRole('org-admin')) {
+        // مدير النظام العام / مدير المنظمة / المشرف: وصول كامل لكل طلاب المنظومة.
+        if ($user->hasRole(['super-admin', 'org-admin', 'supervisor'])) {
             return true;
         }
 
-        if ($user->hasRole('supervisor')) {
-            return $user->can('students.view');
-        }
-
+        // المعلم: فقط الطلاب المنتسبون إلى حلقاته المسندة إليه رسمياً.
         if ($user->hasRole('teacher')) {
-            return $student->circle && $student->circle->teacher_id === $user->id;
+            return $student->circle !== null
+                && $student->circle->teacher_id === $user->id;
         }
 
+        // الطالب: يرى ملفه الشخصي فقط.
         if ($user->hasRole('student')) {
             return $student->user_id === $user->id;
         }
 
+        // ولي الأمر: يرى الأبناء المصرَّح لهم فقط.
         if ($user->hasRole('parent')) {
             return $this->guardianCanView($user, $student, 'view_profile');
         }

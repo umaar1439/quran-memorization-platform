@@ -13,12 +13,14 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecitationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentExamsController;
 use App\Http\Controllers\StudentGoalController;
 use App\Http\Controllers\StudentTransferController;
 use App\Http\Controllers\TeacherAttendanceController;
 use App\Http\Controllers\TeacherCircleController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -36,7 +38,6 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/recitations', [RecitationController::class, 'index'])->name('recitations.index');
     Route::post('/recitations', [RecitationController::class, 'store'])->name('recitations.store');
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/student-goals/{student_goal}', [StudentGoalController::class, 'update'])->name('student-goals.update');
 
     Route::get('/student-dashboard/{student}', [StudentDashboardController::class, 'index'])->name('student-dashboard.index');
+
+    // عرض ملف + لوحة تحكم طالب محدد (مدير/مشرف/معلم) مع تفويض الصلاحية لـ StudentProfilePolicy.
+    Route::get('/students/{student}', [StudentDashboardController::class, 'show'])->name('students.show');
 
     // Phase 9: الامتحانات.
     Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
@@ -93,6 +97,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/mosques/{mosque}', [MosqueController::class, 'destroy'])->name('mosques.destroy');
 
         Route::get('/circles', [CircleController::class, 'page'])->name('circles.index');
+        Route::get('/circles/{circle}', [CircleController::class, 'show'])->name('circles.show');
         Route::post('/circles', [CircleController::class, 'store'])->name('circles.store');
         Route::patch('/circles/{circle}', [CircleController::class, 'update'])->name('circles.update');
         Route::delete('/circles/{circle}', [CircleController::class, 'destroy'])->name('circles.destroy');
@@ -101,6 +106,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        // إدارة المعلمين (منفصلة عن إدارة المستخدمين).
+        Route::get('/teachers', [TeacherController::class, 'page'])->name('teachers.index');
+        Route::post('/teachers', [TeacherController::class, 'store'])->name('teachers.store');
+        Route::patch('/teachers/{teacher}', [TeacherController::class, 'update'])->name('teachers.update');
+        Route::delete('/teachers/{teacher}', [TeacherController::class, 'destroy'])->name('teachers.destroy');
+
+        // إدارة الطلاب (منفصلة عن إدارة المستخدمين).
+        Route::get('/students', [StudentController::class, 'page'])->name('students.index');
+        Route::post('/students', [StudentController::class, 'store'])->name('students.store');
+        Route::patch('/students/{student}', [StudentController::class, 'update'])->name('students.update');
+        Route::delete('/students/{student}', [StudentController::class, 'destroy'])->name('students.destroy');
 
         Route::get('/settings', [SettingsController::class, 'page'])->name('settings.index');
         Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');

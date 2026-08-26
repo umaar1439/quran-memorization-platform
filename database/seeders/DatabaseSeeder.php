@@ -46,8 +46,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'مسجد النور',
         ]);
 
-        // 6) مستخدم Super Admin (عابر للمنظمات، بلا organization_id).
-        $superAdmin = User::factory()->superAdmin()->create([
+        // 6) مستخدم Super Admin (يعبر المنظمات عبر Global Scope bypass في
+        // BelongsToOrganization). يملك organization_id = المنظمة التجريبية حتى
+        // يتطابق team context مع دور super-admin المقيّد بنفس المنظمة، فيعمل
+        // RoleMiddleware و hasRole بشكل صحيح (وإلا يعيد 403 على مسارات /admin).
+        $superAdmin = User::factory()->create([
+            'organization_id' => $organization->id,
             'name' => 'مدير النظام العام',
             'email' => 'super-admin@example.com',
             'password' => Hash::make('password'),

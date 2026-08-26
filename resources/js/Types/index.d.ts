@@ -7,6 +7,7 @@ export interface User {
     locale?: string | null;
     status?: string;
     organization_id?: number | null;
+    circlesTaught?: Circle[];
 }
 
 export interface Organization {

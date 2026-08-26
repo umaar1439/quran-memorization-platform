@@ -47,4 +47,19 @@ class StudentDashboardController extends Controller
             'student' => $student->load(['mosque', 'circle']),
         ]);
     }
+
+    /**
+     * صفحة عرض ملف + لوحة تحكم طالب محدد (للمدير/المشرف/المعلم ضمن صلاحياته).
+     * التحقق من الصلاحية عبر StudentProfilePolicy::view (نفس نطاق عرض البيانات):
+     * مدير/مشرف = وصول كامل داخل المنظومة، معلم = طلاب حلقاته فقط.
+     */
+    public function show(Request $request, StudentProfile $student): Response
+    {
+        $this->authorize('view', $student);
+
+        return Inertia::render('Students/Show', [
+            'student' => $student->load(['user', 'mosque', 'circle']),
+            'analytics' => $this->calculateAnalytics->execute($student),
+        ]);
+    }
 }

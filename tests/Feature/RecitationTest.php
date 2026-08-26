@@ -56,6 +56,8 @@ test('teacher records a recitation successfully for a student in their circle', 
         'surah_number' => 1,
         'ayah_from' => 1,
         'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ]);
 
@@ -162,6 +164,8 @@ test('invalid quranic range is rejected: surah greater than 114', function () {
         'surah_number' => 115,
         'ayah_from' => 1,
         'ayah_to' => 2,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ]);
 
@@ -194,6 +198,8 @@ test('invalid quranic range is rejected: ayah_from greater than ayah_to', functi
         'surah_number' => 1,
         'ayah_from' => 5,
         'ayah_to' => 2,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ]);
 
@@ -228,6 +234,8 @@ test('attendance is recorded automatically on the first recitation of the day', 
         'surah_number' => 1,
         'ayah_from' => 1,
         'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ]);
 
@@ -248,9 +256,157 @@ test('attendance is recorded automatically on the first recitation of the day', 
         'surah_number' => 1,
         'ayah_from' => 1,
         'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ])->assertCreated();
 
     expect(TeacherAttendance::withoutGlobalScopes()->count())->toBe(1);
     expect($attendance->refresh()->actions_count)->toBe(2);
+});
+
+/**
+ * يُنشئ سياق تسجيل تسميع كامل (منظمة + معلم + طالب في نفس الحلقة)
+ * ويعيد [teacher, student] جاهزين للاستخدام في الاختبارات.
+ */
+function makeRecitationFixture(): array
+{
+    $org = Organization::factory()->create();
+    $roles = seedRolesForRecitation($org->id);
+
+    $mosque = Mosque::factory()->create(['organization_id' => $org->id]);
+    $circle = Circle::factory()->create(['organization_id' => $org->id, 'mosque_id' => $mosque->id]);
+
+    $teacher = User::factory()->create(['organization_id' => $org->id]);
+    $teacher->assignRole($roles['teacher']);
+    $circle->update(['teacher_id' => $teacher->id]);
+
+    $student = StudentProfile::factory()->create([
+        'organization_id' => $org->id,
+        'mosque_id' => $mosque->id,
+        'circle_id' => $circle->id,
+    ]);
+
+    return [$teacher, $student];
+}
+
+test('a recitation with an ayah range within the surah ayah count is accepted', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    // سورة الإخلاص (112) عدد آياتها 4 — نطاق 1-4 صحيح.
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 112,
+        'ayah_from' => 1,
+        'ayah_to' => 4,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertCreated();
+});
+
+test('a recitation with ayah_to exceeding the surah ayah count is rejected', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    // سورة الإخلاص (112) عدد آياتها 4 — آية 5 غير صالحة.
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 112,
+        'ayah_from' => 1,
+        'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors(['ayah_to']);
+});
+
+test('a recitation with ayah_from exceeding the surah ayah count is rejected', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    // سورة الإخلاص (112) عدد آياتها 4 — بداية النطاق عند آية 5 غير صالحة.
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 112,
+        'ayah_from' => 5,
+        'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors(['ayah_to']);
+});
+
+test('a recitation accepts a note from the fixed options list', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertCreated();
+
+    expect(Recitation::withoutGlobalScopes()->first()->notes)->toBe('حافظ');
+});
+
+test('a recitation accepts a custom note when "اخرى" is selected', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => 'يحتاج إلى مراجعة أحكام التجويد',
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertCreated();
+
+    expect(Recitation::withoutGlobalScopes()->first()->notes)->toBe('يحتاج إلى مراجعة أحكام التجويد');
+});
+
+test('a recitation with a note longer than 500 characters is rejected', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'rating' => 'excellent',
+        'notes' => str_repeat('ا', 501),
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors(['notes']);
+});
+
+test('submitting a recitation without rating and notes is rejected with 422', function () {
+    [$teacher, $student] = makeRecitationFixture();
+    $this->actingAs($teacher);
+
+    $this->postJson('/recitations', [
+        'student_id' => $student->id,
+        'type' => RecitationType::New->value,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'idempotency_key' => (string) Str::uuid(),
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors(['rating', 'notes']);
 });

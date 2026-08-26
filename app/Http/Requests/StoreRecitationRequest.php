@@ -42,8 +42,8 @@ class StoreRecitationRequest extends FormRequest
                 'integer',
                 new ValidAyahRange($this->input('surah_number'), $this->input('ayah_from')),
             ],
-            'rating' => ['nullable', Rule::enum(RecitationRating::class)],
-            'notes' => ['nullable', 'string', 'max:2000'],
+            'rating' => ['required', Rule::enum(RecitationRating::class)],
+            'notes' => ['required', 'string', 'max:500'],
             'performed_at' => ['nullable', 'date'],
             'idempotency_key' => ['required', 'uuid'],
         ];

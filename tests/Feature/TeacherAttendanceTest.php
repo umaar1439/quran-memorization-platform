@@ -60,6 +60,8 @@ test('a teacher records separate attendance per mosque when teaching in multiple
         'surah_number' => 2,
         'ayah_from' => 1,
         'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ])->assertCreated();
 
@@ -70,6 +72,8 @@ test('a teacher records separate attendance per mosque when teaching in multiple
         'surah_number' => 2,
         'ayah_from' => 1,
         'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ])->assertCreated();
 
@@ -100,6 +104,8 @@ test('a teacher records separate attendance per mosque when teaching in multiple
         'surah_number' => 3,
         'ayah_from' => 1,
         'ayah_to' => 5,
+        'rating' => 'excellent',
+        'notes' => 'حافظ',
         'idempotency_key' => (string) Str::uuid(),
     ])->assertCreated();
 

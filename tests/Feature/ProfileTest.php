@@ -50,38 +50,16 @@ test('email verification status is unchanged when the email address is unchanged
     $this->assertNotNull($user->refresh()->email_verified_at);
 });
 
-test('user can delete their account', function () {
+test('a user cannot delete their own account (self-deletion is disabled)', function () {
     $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
+    $this->actingAs($user)
         ->delete('/profile', [
             'password' => 'password',
-        ]);
+        ])
+        ->assertMethodNotAllowed();
 
-    $response
-        ->assertSessionHasNoErrors()
-        ->assertRedirect('/');
-
-    $this->assertGuest();
-    // النظام يستخدم الحذف الناعم (SoftDeletes) على users بموجب المعمارية،
-    // لذا السجل يبقى موجوداً في قاعدة البيانات لكنه محذوف منطقياً (trashed).
-    $this->assertTrue($user->fresh()->trashed());
-});
-
-test('correct password must be provided to delete account', function () {
-    $user = User::factory()->create();
-
-    $response = $this
-        ->actingAs($user)
-        ->from('/profile')
-        ->delete('/profile', [
-            'password' => 'wrong-password',
-        ]);
-
-    $response
-        ->assertSessionHasErrors('password')
-        ->assertRedirect('/profile');
-
+    // الحساب لا يُحذف ذاتياً — حذف المستخدمين مسؤولية الإدارة فقط.
     $this->assertNotNull($user->fresh());
+    $this->assertFalse($user->fresh()->trashed());
 });

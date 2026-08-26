@@ -26,11 +26,22 @@ const adminNav: NavItem[] = [
     { label: 'لوحة التحكم', routeName: 'admin.dashboard' },
     { label: 'المساجد', routeName: 'admin.mosques.index' },
     { label: 'الحلقات', routeName: 'admin.circles.index' },
+    { label: 'المعلمون', routeName: 'admin.teachers.index' },
+    { label: 'الطلاب', routeName: 'admin.students.index' },
     { label: 'المستخدمون', routeName: 'admin.users.index' },
     { label: 'الإعدادات', routeName: 'admin.settings.index' },
     { label: 'Feature Flags', routeName: 'admin.feature-flags.index' },
     { label: 'التقارير', routeName: 'admin.reports.page' },
     { label: 'سجل التدقيق', routeName: 'admin.audit-logs.page' },
+];
+
+const supervisorNav: NavItem[] = [
+    { label: 'لوحة التحكم', routeName: 'admin.dashboard' },
+    { label: 'المساجد', routeName: 'admin.mosques.index' },
+    { label: 'الحلقات', routeName: 'admin.circles.index' },
+    { label: 'المعلمون', routeName: 'admin.teachers.index' },
+    { label: 'الطلاب', routeName: 'admin.students.index' },
+    { label: 'التقارير', routeName: 'admin.reports.page' },
 ];
 
 const teacherNav: NavItem[] = [
@@ -51,6 +62,7 @@ const parentNav: NavItem[] = [{ label: 'أبنائي', routeName: 'parent.dashbo
 
 const navItems = computed<NavItem[]>(() => {
     if (has('org-admin') || has('super-admin')) return adminNav;
+    if (has('supervisor')) return supervisorNav;
     if (has('teacher')) return teacherNav;
     if (has('student')) return studentNav;
     if (has('parent')) return parentNav;
