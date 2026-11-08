@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Enums\ReportStatus;
@@ -7,27 +9,55 @@ use App\Models\Recitation;
 use App\Models\Report;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * يُولّد تقريراً بسيطاً (JSON مبدئياً) ويُحدّث حالة Report. يتحقق مجدداً
  * من الصلاحية وfeature flag عند التنفيذ (ليس فقط عند الإنشاء) — §4
  * تهديد #2 Broken Access Control، دفاع طبقتين (Defense-in-Depth).
  */
-class GenerateReportJob implements ShouldQueue
+class GenerateReportJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * قفل تفرد لكل تقرير: نقر مزدوج أو إعادة إرسال لا تُنتج مهمتين
+     * متوازيتين تتنافسان على نفس الملف ونفس الحالة. المدة تغطي أطول سلسلة
+     * محاولات (3 × 120 ثانية + تباعد) ثم تنتهي تلقائياً كي لا يعلق التقرير.
+     */
+    public int $uniqueFor = 900;
+
+    public function uniqueId(): string
+    {
+        return 'report:'.$this->reportId;
+    }
+
+    /**
+     * سياسة إعادة المحاولة: توليد التقارير عملية I/O خفيفة، فمحاولات قليلة
+     * بتباعد أسّي تكفي ولا تُغرق الطابور عند فشل القرص.
+     */
+    public int $tries = 3;
+
+    public int $timeout = 120;
+
+    /**
+     * @var list<int>
+     */
+    public array $backoff = [10, 60, 180];
 
     public function __construct(
         public readonly int $reportId,
         public readonly int $requestedByUserId,
     ) {}
 
-    public function handle(): void
+    public function handle(PermissionRegistrar $permissions): void
     {
         $report = Report::withoutGlobalScopes()->find($this->reportId);
 
@@ -38,7 +68,7 @@ class GenerateReportJob implements ShouldQueue
         $requester = User::withoutGlobalScopes()->find($this->requestedByUserId);
 
         // تعيين سياق المستأجر لفحص Spatie داخل الـ queue worker (لا middleware هنا).
-        app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($report->organization_id);
+        $permissions->setPermissionsTeamId($report->organization_id);
 
         // فحص ثانٍ للصلاحية عند التنفيذ الفعلي (لا يكفي فحص وقت الطلب فقط).
         if (! $requester || ! $requester->can('reports.generate')) {
@@ -66,6 +96,23 @@ class GenerateReportJob implements ShouldQueue
 
             throw $exception;
         }
+    }
+
+    /**
+     * يُستدعى بعد استنفاد كل المحاولات — يُسجّل السياق ويضمن ألا يبقى
+     * التقرير عالقاً في status=processing إلى الأبد.
+     */
+    public function failed(?\Throwable $exception): void
+    {
+        Log::error('Report generation job failed permanently.', [
+            'report_id' => $this->reportId,
+            'requested_by' => $this->requestedByUserId,
+            'error' => $exception?->getMessage(),
+        ]);
+
+        Report::withoutGlobalScopes()
+            ->whereKey($this->reportId)
+            ->update(['status' => ReportStatus::Failed]);
     }
 
     /**

@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
+use App\DTOs\TeacherData;
 use App\Enums\UserStatus;
 use App\Models\TeacherProfile;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,5 +49,13 @@ class UpdateTeacherRequest extends FormRequest
                 Rule::exists('circles', 'id')->where('organization_id', $organizationId),
             ],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toDto(): TeacherData
+    {
+        return TeacherData::fromArray($this->validated());
     }
 }

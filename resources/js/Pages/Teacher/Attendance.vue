@@ -25,11 +25,11 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">سجل الحضور</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">سجل الحضور</h2>
         </template>
 
         <div class="mx-auto max-w-4xl">
-            <p class="mb-4 text-sm text-gray-500">
+            <p class="mb-4 text-sm text-content-muted">
                 يُحسب الحضور تلقائياً بناءً على نشاطك الفعلي في النظام (تسجيل تسميعات، حضور، إلخ).
             </p>
 

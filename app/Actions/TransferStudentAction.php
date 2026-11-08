@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Models\Circle;
@@ -37,14 +39,14 @@ class TransferStudentAction
 
             if (! $student) {
                 throw ValidationException::withMessages([
-                    'student_id' => 'الطالب غير موجود.',
+                    'student_id' => __('messages.recitations.student_missing'),
                 ]);
             }
 
             // 1) التحقق من العضوية الحالية (الطالب فعلاً في from_circle المتوقعة).
             if ($actor->organization_id === null || $actor->organization_id !== $student->organization_id) {
                 throw ValidationException::withMessages([
-                    'student_id' => 'الطالب لا ينتمي لمنظمتك.',
+                    'student_id' => __('messages.certificates.student_other_org'),
                 ]);
             }
 
@@ -59,7 +61,7 @@ class TransferStudentAction
 
             if (! $toMosque) {
                 throw ValidationException::withMessages([
-                    'to_mosque_id' => 'المسجد الهدف لا ينتمي لنفس منظمة الطالب.',
+                    'to_mosque_id' => __('messages.transfers.mosque_other_org'),
                 ]);
             }
 
@@ -74,7 +76,7 @@ class TransferStudentAction
 
                 if (! $toCircle) {
                     throw ValidationException::withMessages([
-                        'to_circle_id' => 'الحلقة الهدف لا تنتمي لنفس المنظمة/المسجد.',
+                        'to_circle_id' => __('messages.transfers.circle_mismatch'),
                     ]);
                 }
             }

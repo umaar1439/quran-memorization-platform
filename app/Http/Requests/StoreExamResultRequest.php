@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Models\ExamResult;
@@ -65,7 +67,7 @@ class StoreExamResultRequest extends FormRequest
                 ->exists();
 
             if (! $belongsToExam) {
-                $validator->errors()->add('exam_section_id', 'القسم المحدد لا ينتمي لهذا الامتحان.');
+                $validator->errors()->add('exam_section_id', __('messages.exam_results.section_mismatch'));
             }
         });
     }

@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Resources\TeacherAttendanceResource;
 use App\Models\TeacherAttendance;
-use Illuminate\Http\JsonResponse;
+use App\Queries\TeacherAttendanceQuery;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,21 +19,17 @@ use Inertia\Response;
  */
 class TeacherAttendanceController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function __construct(
+        private readonly TeacherAttendanceQuery $attendances,
+    ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', TeacherAttendance::class);
 
-        $user = $request->user();
-
-        $query = TeacherAttendance::query();
-
-        if ($user->hasRole('teacher') && ! $user->hasRole('supervisor') && ! $user->hasRole('org-admin') && ! $user->hasRole('super-admin')) {
-            $query->where('teacher_id', $user->id);
-        }
-
-        return response()->json([
-            'data' => $query->latest('date')->paginate(20),
-        ]);
+        return TeacherAttendanceResource::collection(
+            $this->attendances->paginate($request->user()),
+        );
     }
 
     /**
@@ -39,16 +39,12 @@ class TeacherAttendanceController extends Controller
     {
         $this->authorize('viewAny', TeacherAttendance::class);
 
-        $user = $request->user();
-
-        $query = TeacherAttendance::query();
-
-        if ($user->hasRole('teacher') && ! $user->hasRole('supervisor') && ! $user->hasRole('org-admin') && ! $user->hasRole('super-admin')) {
-            $query->where('teacher_id', $user->id);
-        }
-
         return Inertia::render('Teacher/Attendance', [
-            'attendances' => $query->latest('date')->paginate(30)->withQueryString(),
+            'attendances' => $this->attendances->paginate(
+                $request->user(),
+                (int) config('tahfeez.per_page_large'),
+                withQueryString: true,
+            ),
         ]);
     }
 }

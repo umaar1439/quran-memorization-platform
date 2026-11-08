@@ -1,9 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\CreateMosqueAction;
+use App\Actions\DeleteMosqueAction;
+use App\Actions\UpdateMosqueAction;
 use App\Http\Requests\StoreMosqueRequest;
 use App\Models\Mosque;
+use App\Queries\MosqueDirectoryQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,45 +22,45 @@ use Inertia\Response;
  */
 class MosqueController extends Controller
 {
+    public function __construct(
+        private readonly MosqueDirectoryQuery $mosques,
+        private readonly CreateMosqueAction $createMosque,
+        private readonly UpdateMosqueAction $updateMosque,
+        private readonly DeleteMosqueAction $deleteMosque,
+    ) {}
+
     public function page(Request $request): Response
     {
         $this->authorize('viewAny', Mosque::class);
 
-        $query = Mosque::query()->withCount('circles');
-
-        if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->string('search') . '%');
-        }
-
         return Inertia::render('Admin/Mosques/Index', [
-            'mosques' => $query->latest()->paginate(20)->withQueryString(),
+            'mosques' => $this->mosques->paginate(
+                $request->string('search')->toString() ?: null,
+            ),
             'filters' => $request->only('search'),
         ]);
     }
 
     public function store(StoreMosqueRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-        $data['organization_id'] = $request->user()->organization_id;
+        $this->createMosque->execute($request->validated(), $request->user());
 
-        Mosque::create($data);
-
-        return back()->with('success', 'تم إضافة المسجد بنجاح.');
+        return back()->with('success', __('messages.mosques.created'));
     }
 
     public function update(StoreMosqueRequest $request, Mosque $mosque): RedirectResponse
     {
-        $mosque->update($request->validated());
+        $this->updateMosque->execute($mosque, $request->validated());
 
-        return back()->with('success', 'تم تحديث بيانات المسجد بنجاح.');
+        return back()->with('success', __('messages.mosques.updated'));
     }
 
     public function destroy(Mosque $mosque): RedirectResponse
     {
         $this->authorize('delete', $mosque);
 
-        $mosque->delete();
+        $this->deleteMosque->execute($mosque);
 
-        return back()->with('success', 'تم حذف المسجد بنجاح.');
+        return back()->with('success', __('messages.mosques.deleted'));
     }
 }

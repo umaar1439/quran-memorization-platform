@@ -129,7 +129,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">نتائج: {{ exam.title }}</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">نتائج: {{ exam.title }}</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -161,7 +161,7 @@ function onPageChange(page: number): void {
                         <button
                             v-if="(row as unknown as ExamResult).status !== 'approved'"
                             type="button"
-                            class="text-sm font-medium text-green-600 hover:underline"
+                            class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
                             @click="approve(row as unknown as ExamResult)"
                         >
                             اعتماد
@@ -169,7 +169,7 @@ function onPageChange(page: number): void {
                         <button
                             v-else
                             type="button"
-                            class="text-sm font-medium text-amber-600 hover:underline"
+                            class="text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline"
                             @click="openCorrectModal(row as unknown as ExamResult)"
                         >
                             تصحيح
@@ -181,7 +181,7 @@ function onPageChange(page: number): void {
 
         <Modal :show="showAddModal" @close="showAddModal = false">
             <form class="p-6" @submit.prevent="submitResult">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">تسجيل نتيجة جديدة</h3>
+                <h3 class="mb-4 text-lg font-semibold text-content">تسجيل نتيجة جديدة</h3>
                 <div class="space-y-4">
                     <FormInput id="result-student" v-model="addForm.student_id" type="number" label="رقم الطالب (Student ID)" required :error="errors.student_id" />
                     <FormSelect id="result-section" v-model="addForm.exam_section_id" label="القسم" :options="sectionOptions" required :error="errors.exam_section_id" />
@@ -189,7 +189,7 @@ function onPageChange(page: number): void {
                     <FormInput id="result-grade" v-model="addForm.grade" label="التقدير" :error="errors.grade" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showAddModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showAddModal = false">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
@@ -201,14 +201,14 @@ function onPageChange(page: number): void {
 
         <Modal :show="showCorrectModal" @close="showCorrectModal = false">
             <form class="p-6" @submit.prevent="submitCorrection">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">تصحيح نتيجة معتمدة</h3>
+                <h3 class="mb-4 text-lg font-semibold text-content">تصحيح نتيجة معتمدة</h3>
                 <div class="space-y-4">
                     <FormInput id="correct-score" v-model="correctForm.score" type="number" label="الدرجة الجديدة" required :error="errors.score" />
                     <FormInput id="correct-grade" v-model="correctForm.grade" label="التقدير الجديد" :error="errors.grade" />
                     <FormInput id="correct-reason" v-model="correctForm.reason" label="سبب التصحيح" required :error="errors.reason" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showCorrectModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showCorrectModal = false">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

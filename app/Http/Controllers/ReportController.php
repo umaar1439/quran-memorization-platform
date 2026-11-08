@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\DownloadReportAction;
 use App\Actions\GenerateReportAction;
 use App\Http\Requests\StoreReportRequest;
+use App\Http\Resources\ReportResource;
 use App\Models\Report;
+use App\Queries\ReportDirectoryQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -21,6 +26,8 @@ class ReportController extends Controller
 {
     public function __construct(
         private readonly GenerateReportAction $generateReport,
+        private readonly DownloadReportAction $downloadReport,
+        private readonly ReportDirectoryQuery $reports,
     ) {}
 
     public function store(StoreReportRequest $request): JsonResponse
@@ -30,37 +37,21 @@ class ReportController extends Controller
             $request->user(),
         );
 
-        return response()->json([
-            'data' => $report,
-        ], 201);
+        return (new ReportResource($report))->response()->setStatusCode(201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Report::class);
 
-        $query = Report::query();
-
-        return response()->json([
-            'data' => $query->latest('created_at')->paginate(20),
-        ]);
+        return ReportResource::collection($this->reports->paginate());
     }
 
     public function download(Report $report): StreamedResponse
     {
         $this->authorize('download', $report);
 
-        if ($report->expires_at && $report->expires_at->isPast()) {
-            abort(410, 'انتهت صلاحية هذا التقرير.');
-        }
-
-        $filePath = $report->getRawOriginal('file_path');
-
-        if (! $filePath || ! Storage::disk('local')->exists($filePath)) {
-            abort(404, 'ملف التقرير غير موجود.');
-        }
-
-        return Storage::disk('local')->response($filePath);
+        return $this->downloadReport->execute($report);
     }
 
     /**
@@ -71,7 +62,7 @@ class ReportController extends Controller
         $this->authorize('viewAny', Report::class);
 
         return Inertia::render('Admin/Reports/Index', [
-            'reports' => Report::query()->latest('created_at')->paginate(20)->withQueryString(),
+            'reports' => $this->reports->paginate(withQueryString: true),
         ]);
     }
 }

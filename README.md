@@ -1,59 +1,163 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# منصة تحفيظ القرآن الكريم
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+تطبيق Laravel 12 + Inertia.js + Vue 3 لإدارة حلقات تحفيظ القرآن: منظمات، مساجد، حلقات،
+معلمون، طلاب، أولياء أمور، تسميع، امتحانات، شهادات، تقارير، حضور، ولوحات تحكم لكل دور.
 
-## About Laravel
+## المتطلبات
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.2+ مع إضافات `pdo`, `mbstring`, `openssl`, `fileinfo`
+- Composer 2
+- Node.js 20+ و npm
+- قاعدة بيانات: PostgreSQL (المُفضل)، أو MySQL/MariaDB، أو SQLite للتطوير السريع
+- Redis (اختياري: الكاش والطوابير؛ يعمل النظام بـ `database` بدونه)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## التثبيت
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```bash
+# 1) اعتماديات PHP و JS
+composer install
+npm install
 
-## Learning Laravel
+# 2) ملف البيئة
+cp .env.example .env
+php artisan key:generate
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+# 3) قاعدة البيانات
+#    PostgreSQL (القيم الافتراضية في .env.example)
+createdb tahfeez && php artisan migrate --seed
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+#    أو SQLite للتطوير المحلي السريع:
+#    touch database/database.sqlite
+#    ثم في .env: DB_CONNECTION=sqlite
+#    و DB_DATABASE=/absolute/path/to/database/database.sqlite
 
-## Laravel Sponsors
+# 4) بناء الأصول
+npm run build
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## التشغيل
 
-### Premium Partners
+```bash
+php artisan serve          # الخادم
+npm run dev                # Vite HMR أثناء التطوير
+php artisan queue:work     # معالجة الشهادات/التقارير/الإشعارات
+php artisan schedule:work  # تشغيل المهام المجدولة محلياً (بديل cron)
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+أو كل ذلك معاً: `composer run dev`.
 
-## Contributing
+### المهام المجدولة (الإنتاج)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+`routes/console.php` يعرّف المهام التالية بـ `withoutOverlapping()` و`onOneServer()`:
 
-## Code of Conduct
+| الأمر | التكرار |
+| --- | --- |
+| `sanctum:prune-expired --hours=24` | يومياً |
+| `queue:prune-failed --hours=168` | أسبوعياً |
+| `queue:prune-batches --hours=48` | يومياً |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+في الإنتاج أضف cron واحداً:
 
-## Security Vulnerabilities
+```cron
+* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## الحسابات التجريبية (`DatabaseSeeder`)
 
-## License
+كلمة المرور للجميع: `password`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| الدور | البريد |
+| --- | --- |
+| مدير النظام العام | `super-admin@example.com` |
+| مدير المنظمة | `org-admin@example.com` |
+| مشرف | `supervisor@example.com` |
+| معلم | `teacher@example.com` |
+| طالب | `student@example.com` |
+| ولي أمر | `parent@example.com` |
+
+> الـ Seeder تطويري فقط. لا تعتمد عليه في الإنتاج؛ أنشئ أول منظمة وأول `super-admin`
+> عبر بيانات بيئة آمنة أو أمر مخصص.
+
+## الاختبارات والجودة
+
+```bash
+php artisan test                 # Pest (Feature + Unit)
+./vendor/bin/pint                # تنسيق Laravel Pint
+./vendor/bin/pint --test         # التحقق دون تعديل
+```
+
+
+## البنية المعمارية
+
+```
+Route → Middleware → Controller → FormRequest → Action/Query → Model → Resource
+```
+
+| الطبقة | المجلد | الدور |
+| --- | --- | --- |
+| Controllers | `app/Http/Controllers` | رقيقة: تفويض فقط، بلا استعلامات أو منطق أعمال |
+| Requests | `app/Http/Requests` | التحقق + `authorize()` + تحويل إلى DTO |
+| Actions | `app/Actions` | حالة استخدام واحدة لكل Action، مع `DB::transaction` |
+| Queries | `app/Queries` | استعلامات قراءة قابلة لإعادة الاستخدام (قوائم، لوحات تحكم) |
+| DTOs | `app/DTOs` | كائنات `readonly` بين الطبقات بدل المصفوفات الحرة |
+| Resources | `app/Http/Resources` | عقد JSON صريح يُخفي الحقول الداخلية (مثل `file_path`) |
+| Support | `app/Support` | خدمات صغيرة مشتركة (كاش الأعلام/الإعدادات، تهريب LIKE) |
+| Enums | `app/Enums` | قيم مغلقة مع Casts في Eloquent |
+| lang | `lang/ar`, `lang/en` | كل نص يظهر للمستخدم (رسائل، تحقق، إشعارات) |
+
+### قواعد سلوكية مهمة
+
+- `BelongsToOrganization` يفرض Global Scope لكل مستأجر ويستثني `super-admin` فقط.
+- `User::$fillable` **لا يتضمن** `organization_id` ولا `status` (منع Privilege Escalation)؛
+  إسنادهما يتم صراحةً داخل الـ Actions، لا عبر `create()`.
+- `FeatureFlagCache` و`SettingsCache` مصدران وحيدان للقراءة والإبطال — لا تُكتب مفاتيح
+  الكاش يدوياً داخل Controllers.
+- `Logging` و`SecurityHeaders`: HSTS للإنتاج فقط، وCSP يحتوي `unsafe-eval` و`ws:` في
+  التطوير فقط (HMR)، ويُشدَّد في الإنتاج.
+
+## الالتزام بقواعد `clinerules`
+
+**مُطبَّق بالكامل**
+
+- `declare(strict_types=1)` في كل ملفات `app/`, `database/`, `routes/`, `tests/`.
+- Laravel Pint نظيف على كل الملفات.
+- `Model::shouldBeStrict()` + `DB::prohibitDestructiveCommands()` في `AppServiceProvider`.
+- لا SQL خام إطلاقاً (لا `DB::raw` ولا `whereRaw` …).
+- FormRequest لكل عملية كتابة، و`authorize()` داخل الطلب.
+- Actions + DTOs لمسارات المعلم/الطالب، وActions لكل عملية كتابة (تسميع، تصحيح نتيجة،
+  نقل طالب، شهادة، تقرير، إعدادات، أعلام ميزات).
+- استعلامات القراءة للقوائم ولوحة الحلقة في `app/Queries` (Teacher/Student/Circle + خيارات).
+- كل استجابة JSON عبر `JsonResource` مع استبعاد الحقول الداخلية.
+- `DB::transaction()` لكل كتابة متعددة الخطوات، و`upsert` للإعدادات.
+- توطين كامل لرسائل الخادم (`lang/ar` + `lang/en`) بدل النصوص المضمنة.
+- كاش مُبطل عند الكتابة عبر خدمات مركزية، وحدود صريحة لكل قائمة.
+- Jobs: `tries` + `backoff` + `timeout` + `failed()` مع تسجيل السياق.
+- جدولة بـ `withoutOverlapping()` و`onOneServer()`.
+
+**متبقٍ (دين تقني موثّق، لا كسر وظيفي)**
+
+1. بعض الـ Controllers ما زالت تحتوي استعلامات قراءة بسيطة داخل `page()`
+   (Mosques, Users, Circles, Exams, Reports, AuditLogs, Settings, TeacherAttendance).
+   النمط جاهز في `app/Queries`؛ النقل تدريجي.
+2. `queryClient`/`axios` غير مستخدمة في الواجهة؛ كل القراءات عبر Inertia props.
+3. ترجمة نصوص Vue ليست مركزية بعد (لا `vue-i18n`) — نصوص الواجهة عربية مباشرة.
+4. لا طبقة API عامة مُصدَّرة (`/api/v1`) — الاستجابات JSON داخلية للواجهة فقط،
+   لكنها تتبع عقد Resources موحّداً وجاهزة للنقل إلى `routes/api.php` عند الحاجة.
+5. لا CI (GitHub Actions) ولا Larastan/PHPStan بعد.
+
+## الإنتاج
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+php artisan optimize          # config + route + event + view caches
+php artisan queue:restart
+```
+
+تأكد من: `APP_ENV=production`، `APP_DEBUG=false`، `SESSION_SECURE_COOKIE=true`،
+`QUEUE_CONNECTION=redis`، ومفتاح `APP_KEY` مُولَّد ولا يُشارَك.
+
+## الرخصة
+
+MIT.

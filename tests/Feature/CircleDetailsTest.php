@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Circle;
 use App\Models\Mosque;
 use App\Models\Organization;

@@ -117,7 +117,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">الحلقات</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">الحلقات</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -149,13 +149,13 @@ function onPageChange(page: number): void {
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex gap-2">
-                        <Link :href="route('admin.circles.show', (row as unknown as Circle).id)" class="text-sm font-medium text-teal-600 hover:underline">
+                        <Link :href="route('admin.circles.show', (row as unknown as Circle).id)" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">
                             عرض
                         </Link>
-                        <button type="button" class="text-sm font-medium text-teal-600 hover:underline" @click="openEditModal(row as unknown as Circle)">
+                        <button type="button" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline" @click="openEditModal(row as unknown as Circle)">
                             تعديل
                         </button>
-                        <button type="button" class="text-sm font-medium text-red-600 hover:underline" @click="confirmDelete(row as unknown as Circle)">
+                        <button type="button" class="text-sm font-medium text-red-600 dark:text-red-400 hover:underline" @click="confirmDelete(row as unknown as Circle)">
                             حذف
                         </button>
                     </div>
@@ -165,7 +165,7 @@ function onPageChange(page: number): void {
 
         <Modal :show="showModal" @close="showModal = false">
             <form class="p-6" @submit.prevent="submit">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">
+                <h3 class="mb-4 text-lg font-semibold text-content">
                     {{ editingCircle ? 'تعديل حلقة' : 'إضافة حلقة جديدة' }}
                 </h3>
                 <div class="space-y-4">
@@ -177,7 +177,7 @@ function onPageChange(page: number): void {
                     <FormSelect id="circle-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="form.errors.status" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
                         إلغاء
                     </button>
                     <button

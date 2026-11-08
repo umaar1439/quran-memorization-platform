@@ -143,7 +143,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">إدارة المعلمين</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">إدارة المعلمين</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -181,10 +181,10 @@ function onPageChange(page: number): void {
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex gap-2">
-                        <button type="button" class="text-sm font-medium text-teal-600 hover:underline" @click="openEditModal(row as TeacherRow)">
+                        <button type="button" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline" @click="openEditModal(row as TeacherRow)">
                             تعديل
                         </button>
-                        <button type="button" class="text-sm font-medium text-red-600 hover:underline" @click="confirmDelete(row as TeacherRow)">
+                        <button type="button" class="text-sm font-medium text-red-600 dark:text-red-400 hover:underline" @click="confirmDelete(row as TeacherRow)">
                             حذف
                         </button>
                     </div>
@@ -194,7 +194,7 @@ function onPageChange(page: number): void {
 
         <Modal :show="showModal" @close="showModal = false">
             <form class="p-6" @submit.prevent="submit">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">
+                <h3 class="mb-4 text-lg font-semibold text-content">
                     {{ editingTeacher ? 'تعديل معلم' : 'إضافة معلم جديد' }}
                 </h3>
                 <div class="space-y-4">
@@ -215,27 +215,27 @@ function onPageChange(page: number): void {
                     <FormSelect id="teacher-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="form.errors.status" />
 
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-gray-700">
+                        <label class="mb-1 block text-sm font-medium text-content-body">
                             الحلقات المسندة
-                            <span class="text-red-600">*</span>
+                            <span class="text-red-600 dark:text-red-400">*</span>
                         </label>
-                        <p v-if="form.errors.circles" class="mt-1 text-sm text-red-600">{{ form.errors.circles }}</p>
-                        <div class="max-h-48 space-y-2 overflow-y-auto rounded-md border border-gray-200 p-3">
+                        <p v-if="form.errors.circles" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.errors.circles }}</p>
+                        <div class="max-h-48 space-y-2 overflow-y-auto rounded-md border border-edge p-3">
                             <label v-for="circle in circles" :key="circle.id" class="flex items-center gap-2 text-sm">
                                 <input
                                     type="checkbox"
                                     :checked="form.circles.includes(circle.id)"
-                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                    class="rounded border-edge-strong bg-surface text-teal-600 dark:text-teal-400 focus:ring-teal-500"
                                     @change="toggleCircle(circle.id)"
                                 />
                                 <span>{{ circleLabel(circle) }}</span>
                             </label>
-                            <p v-if="circles.length === 0" class="text-sm text-gray-500">لا توجد حلقات متاحة</p>
+                            <p v-if="circles.length === 0" class="text-sm text-content-muted">لا توجد حلقات متاحة</p>
                         </div>
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
                         إلغاء
                     </button>
                     <button

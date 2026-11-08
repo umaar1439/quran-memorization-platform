@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Circle;
 use App\Models\Mosque;
 use App\Models\Organization;
 use App\Models\StudentProfile;
+use App\Models\Surah;
 use App\Models\User;
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -59,7 +63,7 @@ test('super-admin role bypasses the tenant global scope and sees records from al
     Mosque::factory()->create(['organization_id' => $orgA->id]);
     Mosque::factory()->create(['organization_id' => $orgB->id]);
 
-    $roleSeeder = new \Database\Seeders\RoleAndPermissionSeeder;
+    $roleSeeder = new RoleAndPermissionSeeder;
     $roleSeeder->run();
     $roles = $roleSeeder->createRolesForOrganization($orgA->id);
 
@@ -76,7 +80,7 @@ test('reference data tables like surahs are never scoped by organization', funct
     $user = User::factory()->create(['organization_id' => $org->id]);
     $this->actingAs($user);
 
-    \App\Models\Surah::query()->create([
+    Surah::query()->create([
         'number' => 1,
         'name_arabic' => 'الفاتحة',
         'name_english' => 'Al-Faatiha',
@@ -84,7 +88,7 @@ test('reference data tables like surahs are never scoped by organization', funct
         'ayah_count' => 7,
     ]);
 
-    expect(\App\Models\Surah::count())->toBe(1);
+    expect(Surah::count())->toBe(1);
 });
 
 test('nested tenant-owned relations stay consistent within the same organization', function () {

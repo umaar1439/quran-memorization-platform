@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Actions\GenerateCertificateAction;
 use App\Enums\CertificateStatus;
 use App\Jobs\GenerateCertificateJob;
 use App\Models\AuditLog;
@@ -9,6 +12,7 @@ use App\Models\Mosque;
 use App\Models\Organization;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Support\FeatureFlagCache;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -250,7 +254,7 @@ test('the generation job re-verifies the feature flag and fails if it was disabl
 
     $this->actingAs($orgAdmin);
 
-    $certificate = app(\App\Actions\GenerateCertificateAction::class)->execute([
+    $certificate = app(GenerateCertificateAction::class)->execute([
         'student_id' => $student->id,
         'certificate_type' => 'إتمام حفظ',
     ], $orgAdmin);
@@ -263,7 +267,12 @@ test('the generation job re-verifies the feature flag and fails if it was disabl
         ->where('key', 'certificates.enabled')
         ->update(['enabled' => false]);
 
-    (new \App\Jobs\GenerateCertificateJob($certificate->id, $orgAdmin->id))->handle();
+    // إبطال الذاكرة كما يفعل UpdateFeatureFlagAction عند تبديل العلم من الواجهة،
+    // وإلا قرأ الـ job القيمة المخبأة القديمة (وهذا سلوك مقصود وليس خللاً).
+    app(FeatureFlagCache::class)->forget($org->id);
+
+    // handle() تستقبل تبعياتها بحقن الطريقة (Method Injection) كأي Job يُشغّله الطابور.
+    app()->call([new GenerateCertificateJob($certificate->id, $orgAdmin->id), 'handle']);
 
     expect($certificate->refresh()->status)->toBe(CertificateStatus::Failed);
 });

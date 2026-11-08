@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Actions\CalculateStudentAnalyticsAction;
+use App\Http\Resources\StudentAnalyticsResource;
 use App\Models\StudentProfile;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,9 +28,7 @@ class StudentDashboardController extends Controller
     {
         $this->authorize('view', $student);
 
-        return response()->json([
-            'data' => $this->calculateAnalytics->execute($student),
-        ]);
+        return (new StudentAnalyticsResource($this->calculateAnalytics->execute($student)))->response();
     }
 
     /**
@@ -38,7 +39,7 @@ class StudentDashboardController extends Controller
     {
         $student = $request->user()->studentProfile;
 
-        abort_if(! $student, 404, 'لا يوجد ملف طالب مرتبط بهذا المستخدم.');
+        abort_if(! $student, 404, __('messages.students.missing_profile'));
 
         $this->authorize('view', $student);
 

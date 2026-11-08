@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\Circle;
+use App\Models\Guardian;
 use App\Models\Mosque;
 use App\Models\Organization;
 use App\Models\StudentProfile;
@@ -39,6 +42,11 @@ class DatabaseSeeder extends Seeder
         // 4) الأدوار الستة ضمن سياق هذه المنظمة.
         $roles = $roleSeeder->createRolesForOrganization($organization->id);
         app(PermissionRegistrar::class)->setPermissionsTeamId($organization->id);
+
+        // 4.1) الإعدادات وأعلام الميزات الافتراضية للمنظمة — بدونها تُرفض
+        // مسارات الميزات (مثل /certificates) بـ 403 وتظهر الإعدادات فارغة.
+        app(SettingSeeder::class)->seedForOrganization($organization->id);
+        app(FeatureFlagSeeder::class)->seedForOrganization($organization->id);
 
         // 5) مسجد وحلقة تجريبيان.
         $mosque = Mosque::factory()->create([
@@ -129,7 +137,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $parentUser->assignRole($roles['parent']);
 
-        $guardian = \App\Models\Guardian::query()->create([
+        $guardian = Guardian::query()->create([
             'organization_id' => $organization->id,
             'user_id' => $parentUser->id,
             'name' => $parentUser->name,

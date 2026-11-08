@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -41,8 +43,8 @@ class MissedAttendanceNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تنبيه غياب')
-            ->line("تم تسجيل غياب الطالب بتاريخ {$this->sessionDate}.");
+            ->subject(__('messages.notifications.missed_attendance.title'))
+            ->line(__('messages.notifications.missed_attendance.body', ['date' => $this->sessionDate]));
     }
 
     /**

@@ -44,25 +44,25 @@ function submit(): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">إعدادات المنظمة</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">إعدادات المنظمة</h2>
         </template>
 
         <div class="mx-auto max-w-4xl">
             <EmptyState v-if="settings.length === 0" title="لا توجد إعدادات مُعرَّفة حالياً" />
 
             <form v-else class="space-y-6" @submit.prevent="submit">
-                <div v-for="(items, group) in groups" :key="group" class="rounded-lg bg-white p-6 shadow-sm">
-                    <h3 class="mb-4 text-base font-semibold text-gray-900">{{ group }}</h3>
+                <div v-for="(items, group) in groups" :key="group" class="rounded-lg bg-surface p-6 shadow-sm">
+                    <h3 class="mb-4 text-base font-semibold text-content">{{ group }}</h3>
                     <div class="space-y-4">
                         <div v-for="setting in items" :key="setting.key">
-                            <label :for="`setting-${setting.key}`" class="mb-1 block text-sm font-medium text-gray-700">
+                            <label :for="`setting-${setting.key}`" class="mb-1 block text-sm font-medium text-content-body">
                                 {{ setting.key }}
                             </label>
                             <input
                                 :id="`setting-${setting.key}`"
                                 type="text"
                                 :value="setting.value"
-                                class="block min-h-[44px] w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                                class="block min-h-[44px] w-full rounded-md border-edge-strong bg-surface text-content shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                                 @input="updateValue(setting.key, ($event.target as HTMLInputElement).value)"
                             />
                         </div>

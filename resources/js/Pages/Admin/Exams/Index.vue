@@ -96,7 +96,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">الامتحانات</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">الامتحانات</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -127,7 +127,7 @@ function onPageChange(page: number): void {
                     <StatusBadge :status="(row as unknown as Exam).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
-                    <Link :href="route('admin.exams.results', (row as unknown as Exam).id)" class="text-sm font-medium text-teal-600 hover:underline">
+                    <Link :href="route('admin.exams.results', (row as unknown as Exam).id)" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">
                         عرض النتائج
                     </Link>
                 </template>
@@ -136,7 +136,7 @@ function onPageChange(page: number): void {
 
         <Modal :show="showModal" @close="showModal = false">
             <form class="p-6" @submit.prevent="submit">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">إنشاء امتحان جديد</h3>
+                <h3 class="mb-4 text-lg font-semibold text-content">إنشاء امتحان جديد</h3>
                 <div class="space-y-4">
                     <FormInput id="exam-title" v-model="form.title" label="عنوان الامتحان" required :error="errors.title" />
                     <FormSelect id="exam-mosque" v-model="form.mosque_id" label="المسجد" :options="mosqueOptions" :error="errors.mosque_id" />
@@ -145,7 +145,7 @@ function onPageChange(page: number): void {
                     <FormInput id="exam-scheduled" v-model="form.scheduled_at" type="datetime-local" label="تاريخ الجدولة" :error="errors.scheduled_at" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
                         إلغاء
                     </button>
                     <button

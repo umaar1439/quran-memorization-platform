@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Actions\RecordRecitationAction;
 use App\Http\Requests\StoreRecitationRequest;
+use App\Http\Resources\RecitationResource;
 use App\Models\Recitation;
-use App\Models\StudentProfile;
+use App\Queries\QuickRecitationQuery;
+use App\Queries\RecitationDirectoryQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +25,8 @@ class RecitationController extends Controller
 {
     public function __construct(
         private readonly RecordRecitationAction $recordRecitation,
+        private readonly RecitationDirectoryQuery $recitations,
+        private readonly QuickRecitationQuery $quickRecitation,
     ) {}
 
     public function store(StoreRecitationRequest $request): JsonResponse
@@ -29,44 +36,23 @@ class RecitationController extends Controller
             $request->user(),
         );
 
-        return response()->json([
-            'data' => $recitation->load('errors'),
-        ], 201);
+        return (new RecitationResource($recitation->load('errors')))
+            ->response()
+            ->setStatusCode(201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Recitation::class);
 
-        $user = $request->user();
-
-        $query = Recitation::query()->with('errors');
-
-        if ($user->hasRole('teacher')) {
-            $query->where('teacher_id', $user->id);
-        } elseif ($user->hasRole('student')) {
-            $studentProfile = $user->studentProfile;
-            $query->where('student_id', $studentProfile?->id);
-        } elseif ($user->hasRole('parent')) {
-            $guardian = $user->guardian;
-            $studentIds = $guardian
-                ? $guardian->students()->pluck('student_profiles.id')
-                : collect();
-            $query->whereIn('student_id', $studentIds);
-        }
-
-        return response()->json([
-            'data' => $query->latest('performed_at')->paginate(20),
-        ]);
+        return RecitationResource::collection($this->recitations->paginate($request->user()));
     }
 
     public function show(Recitation $recitation): JsonResponse
     {
         $this->authorize('view', $recitation);
 
-        return response()->json([
-            'data' => $recitation->load('errors'),
-        ]);
+        return (new RecitationResource($recitation->load('errors')))->response();
     }
 
     /**
@@ -77,26 +63,9 @@ class RecitationController extends Controller
     {
         $this->authorize('viewAny', Recitation::class);
 
-        $user = $request->user();
-
-        $students = StudentProfile::query()
-            ->with('user')
-            ->when(
-                $user->hasRole('teacher'),
-                fn ($query) => $query->whereHas('circle', fn ($q) => $q->where('teacher_id', $user->id)),
-            )
-            ->get();
-
-        $recentRecitations = Recitation::query()
-            ->with(['errors', 'student.user'])
-            ->where('teacher_id', $user->id)
-            ->latest('performed_at')
-            ->limit(15)
-            ->get();
-
         return Inertia::render('Teacher/QuickRecitation', [
-            'students' => $students,
-            'recentRecitations' => $recentRecitations,
+            'students' => $this->quickRecitation->students($request->user()),
+            'recentRecitations' => $this->quickRecitation->recent($request->user()),
         ]);
     }
 }

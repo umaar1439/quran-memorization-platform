@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Requests\UpdateSettingRequest;
 use App\Models\Organization;
+use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,7 +50,7 @@ test('settings update accepts allow-listed keys', function () {
         ],
     ])->assertSessionHasNoErrors();
 
-    expect(\App\Models\Setting::withoutGlobalScopes()
+    expect(Setting::withoutGlobalScopes()
         ->where('organization_id', $org->id)
         ->where('key', UpdateSettingRequest::ALLOWED_KEYS[0])
         ->value('value'))->toBe('مركز');

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\DownloadCertificateAction;
 use App\Actions\GenerateCertificateAction;
-use App\Enums\CertificateStatus;
 use App\Http\Requests\StoreCertificateRequest;
+use App\Http\Resources\CertificateResource;
 use App\Models\Certificate;
+use App\Queries\CertificateDirectoryQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -23,6 +27,8 @@ class CertificateController extends Controller
 {
     public function __construct(
         private readonly GenerateCertificateAction $generateCertificate,
+        private readonly DownloadCertificateAction $downloadCertificate,
+        private readonly CertificateDirectoryQuery $certificates,
     ) {}
 
     public function store(StoreCertificateRequest $request): JsonResponse
@@ -32,43 +38,26 @@ class CertificateController extends Controller
             $request->user(),
         );
 
-        return response()->json([
-            'data' => $certificate,
-            'message' => 'جاري توليد الشهادة في الخلفية، سيتم إعلامك فور جاهزيتها.',
-        ], 202);
+        return (new CertificateResource($certificate))
+            ->additional(['message' => __('messages.certificates.queued')])
+            ->response()
+            ->setStatusCode(202);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Certificate::class);
 
-        $user = $request->user();
-
-        $query = Certificate::query();
-
-        if ($user->hasRole('student')) {
-            $studentProfile = $user->studentProfile;
-            $query->where('student_id', $studentProfile?->id);
-        } elseif ($user->hasRole('parent')) {
-            $guardian = $user->guardian;
-            $studentIds = $guardian
-                ? $guardian->students()->pluck('student_profiles.id')
-                : collect();
-            $query->whereIn('student_id', $studentIds);
-        }
-
-        return response()->json([
-            'data' => $query->latest('issued_at')->paginate(20),
-        ]);
+        return CertificateResource::collection(
+            $this->certificates->paginate($request->user()),
+        );
     }
 
     public function download(Request $request, Certificate $certificate): StreamedResponse
     {
         $this->authorize('view', $certificate);
 
-        return Storage::disk('local')->response(
-            $certificate->getRawOriginal('file_path'),
-        );
+        return $this->downloadCertificate->execute($certificate);
     }
 
     /**
@@ -77,11 +66,9 @@ class CertificateController extends Controller
      */
     public function verify(string $code): JsonResponse
     {
-        $certificate = Certificate::withoutGlobalScopes()
-            ->where('verification_code', $code)
-            ->first();
+        $certificate = $this->certificates->findIssuedByVerificationCode($code);
 
-        if (! $certificate || $certificate->status !== CertificateStatus::Issued) {
+        if (! $certificate) {
             return response()->json([
                 'valid' => false,
             ]);
@@ -101,23 +88,8 @@ class CertificateController extends Controller
     {
         $this->authorize('viewAny', Certificate::class);
 
-        $user = $request->user();
-
-        $query = Certificate::query();
-
-        if ($user->hasRole('student')) {
-            $studentProfile = $user->studentProfile;
-            $query->where('student_id', $studentProfile?->id);
-        } elseif ($user->hasRole('parent')) {
-            $guardian = $user->guardian;
-            $studentIds = $guardian
-                ? $guardian->students()->pluck('student_profiles.id')
-                : collect();
-            $query->whereIn('student_id', $studentIds);
-        }
-
         return Inertia::render('Student/Certificates', [
-            'certificates' => $query->latest('issued_at')->paginate(20)->withQueryString(),
+            'certificates' => $this->certificates->paginate($request->user(), withQueryString: true),
         ]);
     }
 }

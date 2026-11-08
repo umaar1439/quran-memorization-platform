@@ -79,7 +79,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">التقارير</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">التقارير</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -107,7 +107,7 @@ function onPageChange(page: number): void {
                     <button
                         v-if="(row as unknown as Report).status === 'completed'"
                         type="button"
-                        class="text-sm font-medium text-teal-600 hover:underline"
+                        class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline"
                         @click="downloadReport(row as unknown as Report)"
                     >
                         تنزيل
@@ -118,10 +118,10 @@ function onPageChange(page: number): void {
 
         <Modal :show="showModal" @close="showModal = false">
             <form class="p-6" @submit.prevent="submit">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">طلب تقرير جديد</h3>
+                <h3 class="mb-4 text-lg font-semibold text-content">طلب تقرير جديد</h3>
                 <FormSelect id="report-type" v-model="form.report_type" label="نوع التقرير" :options="reportTypeOptions" required :error="errors.report_type" />
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

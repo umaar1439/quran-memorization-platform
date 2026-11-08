@@ -39,11 +39,11 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">سجل التدقيق</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">سجل التدقيق</h2>
         </template>
 
         <div class="mx-auto max-w-7xl space-y-4">
-            <div class="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 rounded-lg bg-surface p-4 shadow-sm sm:grid-cols-4">
                 <FormInput id="filter-event" v-model="filterForm.event" label="الحدث" placeholder="مثال: created" />
                 <FormInput id="filter-from" v-model="filterForm.from" type="date" label="من تاريخ" />
                 <FormInput id="filter-to" v-model="filterForm.to" type="date" label="إلى تاريخ" />

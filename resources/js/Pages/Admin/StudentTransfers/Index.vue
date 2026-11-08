@@ -73,7 +73,7 @@ function onPageChange(page: number): void {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">سجل نقل الطلاب</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">سجل نقل الطلاب</h2>
                 <button
                     type="button"
                     class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -108,14 +108,14 @@ function onPageChange(page: number): void {
 
         <Modal :show="showModal" @close="showModal = false">
             <form class="p-6" @submit.prevent="submit">
-                <h3 class="mb-4 text-lg font-semibold text-gray-900">نقل طالب إلى مسجد آخر</h3>
+                <h3 class="mb-4 text-lg font-semibold text-content">نقل طالب إلى مسجد آخر</h3>
                 <div class="space-y-4">
                     <FormSelect id="transfer-student" v-model="form.student_id" label="الطالب" :options="studentOptions" required :error="errors.student_id" />
                     <FormSelect id="transfer-mosque" v-model="form.to_mosque_id" label="المسجد الجديد" :options="mosqueOptions" required :error="errors.to_mosque_id" />
                     <FormInput id="transfer-reason" v-model="form.reason" label="سبب النقل" :error="errors.reason" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-gray-300 px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

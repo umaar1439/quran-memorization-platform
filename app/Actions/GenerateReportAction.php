@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Enums\ReportStatus;
@@ -23,13 +25,13 @@ class GenerateReportAction
     {
         if (! $actor->can('reports.generate')) {
             throw ValidationException::withMessages([
-                'actor' => 'لا تملك صلاحية توليد التقارير.',
+                'actor' => __('messages.reports.forbidden'),
             ]);
         }
 
         if ($actor->organization_id === null) {
             throw ValidationException::withMessages([
-                'actor' => 'يجب أن ينتمي المستخدم لمنظمة لتوليد تقرير.',
+                'actor' => __('messages.reports.organization_required'),
             ]);
         }
 

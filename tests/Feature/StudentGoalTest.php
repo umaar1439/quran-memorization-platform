@@ -1,6 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\CalculateStudentAnalyticsAction;
+use App\Enums\GoalStatus;
 use App\Enums\GoalTargetType;
 use App\Enums\PeriodType;
 use App\Enums\RecitationRating;
@@ -180,7 +183,7 @@ test('a goal cannot be updated after completion', function () {
         'target_amount' => 10,
         'period_start' => now()->toDateString(),
         'period_end' => now()->addWeek()->toDateString(),
-        'status' => \App\Enums\GoalStatus::Completed,
+        'status' => GoalStatus::Completed,
     ]);
 
     $this->actingAs($orgAdmin);

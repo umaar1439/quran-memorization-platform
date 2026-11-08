@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Circle;
 use App\Models\FeatureFlag;
 use App\Models\Guardian;
@@ -10,6 +12,7 @@ use App\Models\StudentProfile;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 
 uses(RefreshDatabase::class);
 
@@ -164,7 +167,7 @@ test('disabled feature flag rejects the request with 403', function () {
 
     $user = User::factory()->create(['organization_id' => $org->id]);
 
-    \Illuminate\Support\Facades\Route::middleware(['web', 'feature:certificates.enabled'])
+    Route::middleware(['web', 'feature:certificates.enabled'])
         ->get('/__test/certificates-feature', fn () => 'ok');
 
     $response = $this->actingAs($user)->get('/__test/certificates-feature');

@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\ApproveExamResultAction;
 use App\Actions\CorrectExamResultAction;
-use App\Enums\ExamResultStatus;
+use App\Actions\CreateExamResultAction;
 use App\Http\Requests\CorrectExamResultRequest;
 use App\Http\Requests\StoreExamResultRequest;
+use App\Http\Resources\ExamResultResource;
 use App\Models\Exam;
 use App\Models\ExamResult;
-use App\Notifications\ExamResultNotification;
+use App\Queries\ExamResultDirectoryQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,52 +28,28 @@ class ExamResultController extends Controller
 {
     public function __construct(
         private readonly CorrectExamResultAction $correctExamResult,
+        private readonly CreateExamResultAction $createExamResult,
+        private readonly ApproveExamResultAction $approveExamResult,
+        private readonly ExamResultDirectoryQuery $results,
     ) {}
 
     public function store(StoreExamResultRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        $result = $this->createExamResult->execute(
+            $request->validated(),
+            $request->user(),
+        );
 
-        $result = ExamResult::create([
-            'exam_id' => $data['exam_id'],
-            'exam_section_id' => $data['exam_section_id'],
-            'student_id' => $data['student_id'],
-            'score' => $data['score'],
-            'grade' => $data['grade'] ?? null,
-            'examiner_id' => $request->user()->id,
-            'status' => $data['status'],
-        ]);
-
-        return response()->json([
-            'data' => $result,
-        ], 201);
+        return (new ExamResultResource($result))->response()->setStatusCode(201);
     }
 
     public function approve(Request $request, ExamResult $examResult): JsonResponse
     {
         $this->authorize('approve', $examResult);
 
-        if ($examResult->status === ExamResultStatus::Approved) {
-            return response()->json([
-                'data' => $examResult,
-            ]);
-        }
+        $examResult = $this->approveExamResult->execute($examResult, $request->user());
 
-        $examResult->update([
-            'status' => ExamResultStatus::Approved,
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-        ]);
-
-        $examResult->student?->user?->notify(new ExamResultNotification(
-            studentId: $examResult->student_id,
-            examResultId: $examResult->id,
-            grade: (string) ($examResult->grade ?? $examResult->score),
-        ));
-
-        return response()->json([
-            'data' => $examResult,
-        ]);
+        return (new ExamResultResource($examResult))->response();
     }
 
     public function correct(CorrectExamResultRequest $request, ExamResult $examResult): JsonResponse
@@ -81,9 +61,7 @@ class ExamResultController extends Controller
             $request,
         );
 
-        return response()->json([
-            'data' => $result,
-        ]);
+        return (new ExamResultResource($result))->response();
     }
 
     /**
@@ -95,7 +73,7 @@ class ExamResultController extends Controller
 
         return Inertia::render('Admin/Exams/Results', [
             'exam' => $exam->load('sections'),
-            'results' => $exam->results()->with('student.user')->latest()->paginate(30)->withQueryString(),
+            'results' => $this->results->forExam($exam),
         ]);
     }
 }

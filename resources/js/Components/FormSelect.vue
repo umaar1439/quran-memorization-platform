@@ -32,17 +32,17 @@ defineEmits<{
 
 <template>
     <div>
-        <label v-if="label" :for="id" class="mb-1 block text-sm font-medium text-gray-700">
+        <label v-if="label" :for="id" class="mb-1 block text-sm font-medium text-content-body">
             {{ label }}
-            <span v-if="required" class="text-red-600">*</span>
+            <span v-if="required" class="text-red-600 dark:text-red-400">*</span>
         </label>
         <select
             :id="id"
             :value="modelValue ?? ''"
             :required="required"
             :disabled="disabled"
-            class="block min-h-[44px] w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
-            :class="{ 'border-red-500': error, 'cursor-not-allowed bg-gray-100 text-gray-500': disabled }"
+            class="block min-h-[44px] w-full rounded-md border-edge-strong bg-surface text-content shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+            :class="{ 'border-red-500': error, 'cursor-not-allowed bg-surface-sunken text-content-muted': disabled }"
             @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
         >
             <option value="" disabled>{{ placeholder }}</option>
@@ -50,6 +50,6 @@ defineEmits<{
                 {{ option.label }}
             </option>
         </select>
-        <p v-if="error" class="mt-1 text-sm text-red-600">{{ error }}</p>
+        <p v-if="error" class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
     </div>
 </template>

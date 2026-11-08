@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\ExamResult;
+use App\Queries\StudentExamResultsQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,19 +15,18 @@ use Inertia\Response;
  */
 class StudentExamsController extends Controller
 {
+    public function __construct(
+        private readonly StudentExamResultsQuery $results,
+    ) {}
+
     public function page(Request $request): Response
     {
         $student = $request->user()->studentProfile;
 
-        abort_if(! $student, 404, 'لا يوجد ملف طالب مرتبط بهذا المستخدم.');
+        abort_if(! $student, 404, __('messages.students.missing_profile'));
 
         return Inertia::render('Student/Exams', [
-            'results' => ExamResult::query()
-                ->with('exam')
-                ->where('student_id', $student->id)
-                ->latest('created_at')
-                ->paginate(20)
-                ->withQueryString(),
+            'results' => $this->results->paginate($student->id),
         ]);
     }
 }

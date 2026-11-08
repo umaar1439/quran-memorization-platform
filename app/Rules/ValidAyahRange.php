@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Rules;
 
 use App\Models\Surah;
@@ -27,7 +29,7 @@ class ValidAyahRange implements ValidationRule
         $surahNumber = $this->surahNumber;
 
         if (! is_numeric($ayahFrom) || ! is_numeric($ayahTo)) {
-            $fail('نطاق الآيات غير صالح.');
+            $fail(__('messages.quran.invalid_range'));
 
             return;
         }
@@ -36,19 +38,19 @@ class ValidAyahRange implements ValidationRule
         $ayahTo = (int) $ayahTo;
 
         if ($ayahFrom < 1 || $ayahTo < 1) {
-            $fail('نطاق الآيات يجب أن يكون أرقاماً موجبة.');
+            $fail(__('messages.quran.range_not_positive'));
 
             return;
         }
 
         if ($ayahFrom > $ayahTo) {
-            $fail('يجب أن تكون بداية النطاق (ayah_from) أصغر من أو تساوي نهايته (ayah_to).');
+            $fail(__('messages.quran.range_order'));
 
             return;
         }
 
         if (! is_numeric($surahNumber)) {
-            $fail('رقم السورة مطلوب للتحقق من نطاق الآيات.');
+            $fail(__('messages.quran.surah_required'));
 
             return;
         }
@@ -56,7 +58,7 @@ class ValidAyahRange implements ValidationRule
         $surah = Surah::query()->where('number', (int) $surahNumber)->first();
 
         if (! $surah) {
-            $fail('رقم السورة المحدد غير موجود في المرجع القرآني.');
+            $fail(__('messages.quran.surah_missing'));
 
             return;
         }

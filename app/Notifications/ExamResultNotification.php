@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -42,8 +44,8 @@ class ExamResultNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('نتيجة الامتحان معتمدة')
-            ->line("تم اعتماد نتيجة الامتحان: {$this->grade}.");
+            ->subject(__('messages.notifications.exam_result.title'))
+            ->line(__('messages.notifications.exam_result.body', ['grade' => $this->grade]));
     }
 
     /**

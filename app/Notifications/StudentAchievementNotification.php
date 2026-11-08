@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -43,7 +45,7 @@ class StudentAchievementNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('إنجاز جديد')
+            ->subject(__('messages.notifications.achievement.title'))
             ->line($this->description);
     }
 

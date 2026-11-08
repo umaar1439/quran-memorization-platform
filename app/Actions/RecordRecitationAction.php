@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Enums\RecitationType;
@@ -41,14 +43,14 @@ class RecordRecitationAction
         // شرط 1: المعلم مصادَق عليه.
         if (! $teacher->exists) {
             throw ValidationException::withMessages([
-                'teacher' => 'المعلم غير مصادَق عليه.',
+                'teacher' => __('messages.recitations.unauthenticated'),
             ]);
         }
 
         // شرط 2: صلاحية recitations.create.
         if (! $teacher->can('recitations.create')) {
             throw ValidationException::withMessages([
-                'teacher' => 'لا تملك صلاحية تسجيل التسميع.',
+                'teacher' => __('messages.recitations.forbidden'),
             ]);
         }
 
@@ -57,27 +59,27 @@ class RecordRecitationAction
 
         if (! $student) {
             throw ValidationException::withMessages([
-                'student_id' => 'الطالب غير موجود.',
+                'student_id' => __('messages.recitations.student_missing'),
             ]);
         }
 
         if ($teacher->organization_id === null || $teacher->organization_id !== $student->organization_id) {
             throw ValidationException::withMessages([
-                'student_id' => 'الطالب لا ينتمي لمنظمتك.',
+                'student_id' => __('messages.certificates.student_other_org'),
             ]);
         }
 
         // شرط 5: الطالب في حلقة يُدرّسها هذا المعلم فعلاً (IDOR Defense).
         if (! $student->circle || $student->circle->teacher_id !== $teacher->id) {
             throw ValidationException::withMessages([
-                'student_id' => 'هذا الطالب ليس في حلقة تُدرّسها.',
+                'student_id' => __('messages.recitations.not_your_circle'),
             ]);
         }
 
         // شرط 8: idempotency_key موجود وصالح.
         if (empty($data['idempotency_key'])) {
             throw ValidationException::withMessages([
-                'idempotency_key' => 'مفتاح idempotency مطلوب.',
+                'idempotency_key' => __('messages.recitations.idempotency_required'),
             ]);
         }
 

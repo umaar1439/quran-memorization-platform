@@ -196,9 +196,9 @@ onMounted(async () => {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">تسميع سريع</h2>
+                <h2 class="text-xl font-semibold leading-tight text-content-strong">تسميع سريع</h2>
                 <div class="flex items-center gap-2">
-                    <span v-if="pendingCount > 0" class="text-xs text-amber-700">
+                    <span v-if="pendingCount > 0" class="text-xs text-amber-700 dark:text-amber-300">
                         {{ pendingCount }} تسميع(ات) معلّقة محلياً
                     </span>
                     <OfflineIndicator />
@@ -207,8 +207,8 @@ onMounted(async () => {
         </template>
 
         <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-2">
-            <div class="rounded-lg bg-white p-6 shadow-sm">
-                <h3 class="mb-4 text-base font-semibold text-gray-900">تسجيل تسميع جديد</h3>
+            <div class="rounded-lg bg-surface p-6 shadow-sm">
+                <h3 class="mb-4 text-base font-semibold text-content">تسجيل تسميع جديد</h3>
                 <form class="space-y-4" @submit.prevent="submit">
                     <FormSelect id="recitation-student" v-model="form.student_id" label="الطالب" :options="studentOptions" required :error="errors.student_id" />
                     <FormSelect id="recitation-type" v-model="form.type" label="نوع التسميع" :options="typeOptions" required :error="errors.type" />
@@ -235,18 +235,18 @@ onMounted(async () => {
                 </form>
             </div>
 
-            <div class="rounded-lg bg-white shadow-sm">
-                <div class="border-b border-gray-200 px-4 py-3">
-                    <h3 class="text-base font-semibold text-gray-900">آخر التسميعات</h3>
+            <div class="rounded-lg bg-surface shadow-sm">
+                <div class="border-b border-edge px-4 py-3">
+                    <h3 class="text-base font-semibold text-content">آخر التسميعات</h3>
                 </div>
                 <div v-if="localRecitations.length === 0" class="p-4">
                     <EmptyState title="لا توجد تسميعات مسجَّلة بعد" />
                 </div>
-                <ul v-else class="max-h-[520px] divide-y divide-gray-100 overflow-y-auto">
+                <ul v-else class="max-h-[520px] divide-y divide-edge-soft overflow-y-auto">
                     <li v-for="recitation in localRecitations" :key="recitation.id" class="flex items-center justify-between px-4 py-3 text-sm">
                         <div>
-                            <p class="font-medium text-gray-800">{{ recitation.student?.user?.name ?? 'طالب' }}</p>
-                            <p class="text-gray-500">
+                            <p class="font-medium text-content-strong">{{ recitation.student?.user?.name ?? 'طالب' }}</p>
+                            <p class="text-content-muted">
                                 سورة {{ recitation.surah_number }} — الآيات {{ recitation.ayah_from }} إلى {{ recitation.ayah_to }}
                             </p>
                         </div>

@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Resources\AuditLogResource;
 use App\Models\AuditLog;
-use Illuminate\Http\JsonResponse;
+use App\Queries\AuditLogQuery;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,15 +20,20 @@ use Inertia\Response;
  */
 class AuditLogController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function __construct(
+        private readonly AuditLogQuery $auditLogs,
+    ) {}
+
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', AuditLog::class);
 
-        $query = $this->filteredQuery($request);
-
-        return response()->json([
-            'data' => $query->latest('created_at')->paginate(20),
-        ]);
+        return AuditLogResource::collection($this->auditLogs->paginate(
+            $request->string('event')->toString() ?: null,
+            $request->filled('user_id') ? $request->integer('user_id') : null,
+            $request->date('from')?->toDateString(),
+            $request->date('to')?->toDateString(),
+        ));
     }
 
     /**
@@ -34,34 +43,16 @@ class AuditLogController extends Controller
     {
         $this->authorize('viewAny', AuditLog::class);
 
-        $query = $this->filteredQuery($request);
-
         return Inertia::render('Admin/AuditLogs/Index', [
-            'auditLogs' => $query->latest('created_at')->paginate(30)->withQueryString(),
+            'auditLogs' => $this->auditLogs->paginate(
+                $request->string('event')->toString() ?: null,
+                $request->filled('user_id') ? $request->integer('user_id') : null,
+                $request->date('from')?->toDateString(),
+                $request->date('to')?->toDateString(),
+                (int) config('tahfeez.per_page_large'),
+                withQueryString: true,
+            ),
             'filters' => $request->only('event', 'user_id', 'from', 'to'),
         ]);
-    }
-
-    private function filteredQuery(Request $request)
-    {
-        $query = AuditLog::query()->with('user');
-
-        if ($request->filled('event')) {
-            $query->where('event', $request->string('event'));
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', $request->integer('user_id'));
-        }
-
-        if ($request->filled('from')) {
-            $query->whereDate('created_at', '>=', $request->date('from'));
-        }
-
-        if ($request->filled('to')) {
-            $query->whereDate('created_at', '<=', $request->date('to'));
-        }
-
-        return $query;
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Rules;
 
 use App\Models\Surah;
@@ -16,7 +18,7 @@ class ValidSurahNumber implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_numeric($value) || (int) $value < 1 || (int) $value > 114) {
-            $fail('رقم السورة يجب أن يكون بين 1 و 114.');
+            $fail(__('messages.quran.surah_between'));
 
             return;
         }
@@ -24,7 +26,7 @@ class ValidSurahNumber implements ValidationRule
         $exists = Surah::query()->where('number', (int) $value)->exists();
 
         if (! $exists) {
-            $fail('رقم السورة المحدد غير موجود في المرجع القرآني.');
+            $fail(__('messages.quran.surah_missing'));
         }
     }
 }

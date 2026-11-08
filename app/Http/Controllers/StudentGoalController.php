@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Enums\GoalStatus;
+use App\Actions\CreateStudentGoalAction;
+use App\Actions\UpdateStudentGoalAction;
 use App\Http\Requests\StoreStudentGoalRequest;
 use App\Http\Requests\UpdateStudentGoalRequest;
+use App\Http\Resources\StudentGoalResource;
 use App\Models\StudentGoal;
-use App\Models\StudentProfile;
-use App\Notifications\GoalCompletionNotification;
+use App\Queries\StudentGoalQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,80 +24,36 @@ use Inertia\Response;
  */
 class StudentGoalController extends Controller
 {
+    public function __construct(
+        private readonly StudentGoalQuery $goals,
+        private readonly CreateStudentGoalAction $createGoal,
+        private readonly UpdateStudentGoalAction $updateGoal,
+    ) {}
+
     public function store(StoreStudentGoalRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        $goal = $this->createGoal->execute($request->validated());
 
-        $student = StudentProfile::withoutGlobalScopes()->findOrFail($data['student_id']);
-
-        $goal = StudentGoal::withoutGlobalScopes()->create([
-            'organization_id' => $student->organization_id,
-            'student_id' => $student->id,
-            'period_type' => $data['period_type'],
-            'target_type' => $data['target_type'],
-            'surah_id' => $data['surah_id'] ?? null,
-            'juz_number' => $data['juz_number'] ?? null,
-            'target_amount' => $data['target_amount'],
-            'achieved_amount' => 0,
-            'completion_percentage' => 0,
-            'period_start' => $data['period_start'],
-            'period_end' => $data['period_end'],
-            'status' => GoalStatus::Active,
-        ]);
-
-        return response()->json([
-            'data' => $goal,
-        ], 201);
+        return (new StudentGoalResource($goal))->response()->setStatusCode(201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', StudentGoal::class);
 
-        $user = $request->user();
-
-        $query = StudentGoal::query()->with('surah');
-
-        if ($user->hasRole('teacher') && ! $user->hasRole('supervisor') && ! $user->hasRole('org-admin') && ! $user->hasRole('super-admin')) {
-            $query->whereHas('student.circle', fn ($q) => $q->where('teacher_id', $user->id));
-        } elseif ($user->hasRole('student')) {
-            $studentProfile = $user->studentProfile;
-            $query->where('student_id', $studentProfile?->id);
-        } elseif ($user->hasRole('parent')) {
-            $guardian = $user->guardian;
-            $studentIds = $guardian
-                ? $guardian->students()->pluck('student_profiles.id')
-                : collect();
-            $query->whereIn('student_id', $studentIds);
-        }
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->integer('student_id'));
-        }
-
-        return response()->json([
-            'data' => $query->latest('period_start')->paginate(20),
-        ]);
+        return StudentGoalResource::collection(
+            $this->goals->paginate(
+                $request->user(),
+                $request->filled('student_id') ? $request->integer('student_id') : null,
+            ),
+        );
     }
 
     public function update(UpdateStudentGoalRequest $request, StudentGoal $studentGoal): JsonResponse
     {
-        $wasCompleted = $studentGoal->status === GoalStatus::Completed;
+        $studentGoal = $this->updateGoal->execute($studentGoal, $request->validated());
 
-        $studentGoal->update($request->validated());
-
-        // إشعار إكمال هدف عند الانتقال الفعلي إلى status=completed (Phase 13 نقطة 3).
-        if (! $wasCompleted && $studentGoal->status === GoalStatus::Completed) {
-            $studentGoal->student?->user?->notify(new GoalCompletionNotification(
-                studentId: $studentGoal->student_id,
-                goalId: $studentGoal->id,
-                description: 'تم إكمال الهدف بنجاح.',
-            ));
-        }
-
-        return response()->json([
-            'data' => $studentGoal,
-        ]);
+        return (new StudentGoalResource($studentGoal))->response();
     }
 
     /**
@@ -103,17 +63,12 @@ class StudentGoalController extends Controller
     {
         $student = $request->user()->studentProfile;
 
-        abort_if(! $student, 404, 'لا يوجد ملف طالب مرتبط بهذا المستخدم.');
+        abort_if(! $student, 404, __('messages.students.missing_profile'));
 
         $this->authorize('view', $student);
 
         return Inertia::render('Student/Goals', [
-            'goals' => StudentGoal::query()
-                ->with('surah')
-                ->where('student_id', $student->id)
-                ->latest('period_start')
-                ->paginate(20)
-                ->withQueryString(),
+            'goals' => $this->goals->forStudent($student->id),
         ]);
     }
 }

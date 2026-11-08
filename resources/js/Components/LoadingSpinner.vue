@@ -19,7 +19,7 @@ const sizeClasses: Record<string, string> = {
     <div class="flex items-center justify-center" role="status">
         <svg
             :class="sizeClasses[size]"
-            class="animate-spin text-teal-600"
+            class="animate-spin text-teal-600 dark:text-teal-400"
             fill="none"
             viewBox="0 0 24 24"
         >

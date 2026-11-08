@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Enums\GenericStatus;
-use App\Models\Mosque;
-use App\Models\User;
+use App\Models\Circle;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,7 @@ class StoreCircleRequest extends FormRequest
 
         return $circle
             ? $this->user()->can('update', $circle)
-            : $this->user()->can('create', \App\Models\Circle::class);
+            : $this->user()->can('create', Circle::class);
     }
 
     /**

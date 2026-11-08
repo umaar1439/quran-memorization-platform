@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Enums\GenericStatus;
+use App\Models\Mosque;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +22,7 @@ class StoreMosqueRequest extends FormRequest
 
         return $mosque
             ? $this->user()->can('update', $mosque)
-            : $this->user()->can('create', \App\Models\Mosque::class);
+            : $this->user()->can('create', Mosque::class);
     }
 
     /**

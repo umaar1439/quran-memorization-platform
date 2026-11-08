@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\AuditLog;
 use App\Models\Organization;
 use App\Models\User;
@@ -127,7 +129,8 @@ test('org-admin can list audit logs scoped to their own organization only', func
     $response = $this->getJson('/audit-logs');
 
     $response->assertOk();
-    $ids = collect($response->json('data.data'))->pluck('organization_id')->unique();
+    // عقد الاستجابة الموحّد: ResourceCollection تُرجع {data: [...], links, meta}.
+    $ids = collect($response->json('data'))->pluck('organization_id')->unique();
 
     expect($ids->count())->toBe(1);
     expect($ids->first())->toBe($orgA->id);

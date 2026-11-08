@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions;
 
 use App\Enums\ExamResultStatus;
@@ -27,13 +29,13 @@ class CorrectExamResultAction
     {
         if ($result->status !== ExamResultStatus::Approved) {
             throw ValidationException::withMessages([
-                'status' => 'التصحيح مسموح فقط للنتائج المعتمدة.',
+                'status' => __('messages.exam_results.only_approved'),
             ]);
         }
 
         if (! $actor->can('exams.approve')) {
             throw ValidationException::withMessages([
-                'actor' => 'يحتاج التصحيح صلاحية exams.approve.',
+                'actor' => __('messages.exam_results.approve_permission'),
             ]);
         }
 

@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -22,9 +26,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
-
+        $this->configureEloquentStrictness();
         $this->configureRateLimiters();
+
+        Vite::prefetch(concurrency: 3);
+    }
+
+    /**
+     * صرامة Eloquent (§Database Access):
+     *  - منع lazy loading (كشف N+1 مبكراً).
+     *  - منع إسناد خصائص غير موجودة بشكل صامت.
+     *  - منع قراءة خصائص غير موجودة/غير محمَّلة.
+     *  - منع الأوامر المدمِّرة لقاعدة البيانات في بيئة الإنتاج.
+     *
+     * تُفعَّل خارج الإنتاج فقط حتى لا تُسقِط بيئة الإنتاج بسبب استعلام بطيء.
+     */
+    private function configureEloquentStrictness(): void
+    {
+        Model::shouldBeStrict(! $this->app->isProduction());
+
+        DB::prohibitDestructiveCommands($this->app->isProduction());
     }
 
     /**
@@ -46,6 +67,12 @@ class AppServiceProvider extends ServiceProvider
             // كوسيلة لكشف الحسابات (Enumeration Oracle) دون حجب المستخدمين
             // الشرعيين على الشبكات المشتركة.
             return Limit::perMinute(3)->by($email.'|'.$request->ip());
+        });
+
+        // تأكيد كلمة المرور قبل العمليات الحساسة — يمنع تخمين كلمة المرور
+        // من داخل جلسة مسروقة (§4 Session Hijacking).
+        RateLimiter::for('password-confirm', function ($request) {
+            return Limit::perMinute(6)->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('email-verification', function ($request) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -42,9 +44,9 @@ class CertificateIssuedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تم إصدار شهادتك')
-            ->line("تم إصدار شهادة: {$this->certificateType}.")
-            ->line("رمز التحقق: {$this->verificationCode}.");
+            ->subject(__('messages.notifications.certificate_issued.title'))
+            ->line(__('messages.notifications.certificate_issued.body', ['type' => $this->certificateType]))
+            ->line(__('messages.notifications.certificate_issued.verification_code', ['code' => $this->verificationCode]));
     }
 
     /**

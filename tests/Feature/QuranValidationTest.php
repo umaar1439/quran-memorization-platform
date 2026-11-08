@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Rules\ValidAyahRange;
 use App\Rules\ValidSurahNumber;
 use Database\Seeders\SurahSeeder;

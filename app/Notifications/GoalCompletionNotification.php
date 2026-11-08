@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -42,7 +44,7 @@ class GoalCompletionNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تم إكمال الهدف')
+            ->subject(__('messages.notifications.goal_completed.title'))
             ->line($this->description);
     }
 

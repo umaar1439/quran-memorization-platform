@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\ExamResultStatus;
 use App\Models\Circle;
 use App\Models\Exam;
@@ -12,6 +14,7 @@ use App\Models\Recitation;
 use App\Models\StudentProfile;
 use App\Models\Surah;
 use App\Models\User;
+use Database\Seeders\SurahSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -85,7 +88,7 @@ test('a guardian can be linked to a student with granular permissions', function
 });
 
 test('the surahs reference table contains exactly 114 surahs after seeding', function () {
-    $this->seed(\Database\Seeders\SurahSeeder::class);
+    $this->seed(SurahSeeder::class);
 
     expect(Surah::count())->toBe(114);
     expect(Surah::sum('ayah_count'))->toBe(6236);

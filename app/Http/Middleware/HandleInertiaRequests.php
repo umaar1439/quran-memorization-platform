@@ -1,15 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
-use App\Models\FeatureFlag;
-use App\Models\Setting;
+use App\Support\FeatureFlagCache;
+use App\Support\SettingsCache;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public function __construct(
+        private readonly FeatureFlagCache $featureFlags,
+        private readonly SettingsCache $settings,
+    ) {}
+
     /**
      * The root template that is loaded on the first page visit.
      *
@@ -56,47 +62,24 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * يقرأ كل الإعدادات (المصطلحات الديناميكية) الخاصة بالمنظمة الحالية،
-     * مخبأة عبر Redis بمفتاح يضم organization_id (انظر §7).
+     * يقرأ كل الإعدادات (المصطلحات الديناميكية) الخاصة بالمنظمة الحالية
+     * عبر SettingsCache (مفتاح يضم organization_id — انظر §7).
      *
      * @return array<string, string|null>
      */
     private function sharedSettings(?int $organizationId): array
     {
-        return Cache::remember(
-            "settings:{$organizationId}",
-            now()->addMinutes(10),
-            fn () => Setting::withoutGlobalScopes()
-                ->where('organization_id', $organizationId)
-                ->pluck('value', 'key')
-                ->all()
-        );
+        return $this->settings->all($organizationId);
     }
 
     /**
      * يقرأ كل أعلام الميزات المفعّلة للمنظمة الحالية (أو الافتراضية العالمية
-     * إن لم تُخصَّص المنظمة قيمة override)، مخبأة بمفتاح مستقل عن Settings (§7).
+     * إن لم تُخصَّص المنظمة قيمة override) عبر FeatureFlagCache (§7).
      *
      * @return array<string, bool>
      */
     private function sharedFeatureFlags(?int $organizationId): array
     {
-        return Cache::remember(
-            "feature-flags:{$organizationId}:all",
-            now()->addMinutes(10),
-            function () use ($organizationId) {
-                $defaults = FeatureFlag::withoutGlobalScopes()
-                    ->whereNull('organization_id')
-                    ->pluck('enabled', 'key');
-
-                $overrides = $organizationId
-                    ? FeatureFlag::withoutGlobalScopes()
-                        ->where('organization_id', $organizationId)
-                        ->pluck('enabled', 'key')
-                    : collect();
-
-                return $defaults->merge($overrides)->all();
-            }
-        );
+        return $this->featureFlags->all($organizationId);
     }
 }

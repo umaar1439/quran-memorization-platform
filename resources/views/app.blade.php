@@ -8,7 +8,9 @@
 
         <!-- PWA (Phase 12: PWA والمزامنة Offline) -->
         <link rel="manifest" href="/manifest.json">
-        <meta name="theme-color" content="#0f766e">
+        <!-- لون شريط المتصفح على الجوال: يتبع الوضع الفاتح/الليلي للنظام -->
+        <meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)">
+        <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
         <link rel="icon" href="/icons/icon-192.png">
         <link rel="apple-touch-icon" href="/icons/icon-192.png">
 

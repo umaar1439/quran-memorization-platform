@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
+use App\DTOs\StudentData;
 use App\Enums\StudentStatus;
 use App\Models\StudentProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 /**
  * التحقق من تعديل طالب ونقله بين الحلقات. الحلقة الجديدة يجب أن تنتمي
@@ -53,5 +55,13 @@ class UpdateStudentRequest extends FormRequest
             'current_juz' => ['nullable', 'integer', 'min:1', 'max:30'],
             'status' => ['required', Rule::enum(StudentStatus::class)],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toDto(): StudentData
+    {
+        return StudentData::fromArray($this->validated());
     }
 }

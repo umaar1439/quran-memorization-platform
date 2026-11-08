@@ -30,7 +30,7 @@ defineProps<{
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">أبنائي</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">أبنائي</h2>
         </template>
 
         <div class="mx-auto max-w-5xl space-y-6">
@@ -43,14 +43,14 @@ defineProps<{
             <div
                 v-for="child in children"
                 :key="child.student.id"
-                class="rounded-lg bg-white shadow-sm"
+                class="rounded-lg bg-surface shadow-sm"
             >
-                <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+                <div class="flex items-center justify-between border-b border-edge px-4 py-3">
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900">
+                        <h3 class="text-base font-semibold text-content">
                             {{ child.student.user?.name ?? 'طالب' }}
                         </h3>
-                        <p class="text-sm text-gray-500">
+                        <p class="text-sm text-content-muted">
                             {{ child.student.mosque?.name ?? '—' }}
                             <span v-if="child.student.circle?.name"> — {{ child.student.circle.name }}</span>
                         </p>
@@ -61,8 +61,8 @@ defineProps<{
                 <div class="space-y-4 p-4">
                     <div>
                         <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600">التقدم في الحفظ</span>
-                            <span class="font-medium text-gray-800">
+                            <span class="text-content-soft">التقدم في الحفظ</span>
+                            <span class="font-medium text-content-strong">
                                 {{ child.overall_progress.memorized_ayahs }} /
                                 {{ child.overall_progress.total_ayahs }} آية
                             </span>
@@ -77,8 +77,8 @@ defineProps<{
 
                     <div>
                         <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600">نسبة الحضور</span>
-                            <span class="font-medium text-gray-800">
+                            <span class="text-content-soft">نسبة الحضور</span>
+                            <span class="font-medium text-content-strong">
                                 {{ child.attendance_rate.attendance_days }} يوم حضور
                             </span>
                         </div>

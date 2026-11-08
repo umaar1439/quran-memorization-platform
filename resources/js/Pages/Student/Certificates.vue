@@ -32,7 +32,7 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">شهاداتي</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">شهاداتي</h2>
         </template>
 
         <div class="mx-auto max-w-4xl space-y-4">
@@ -45,22 +45,22 @@ function onPageChange(page: number): void {
             <div
                 v-for="certificate in certificates.data"
                 :key="certificate.id"
-                class="rounded-lg bg-white shadow-sm"
+                class="rounded-lg bg-surface shadow-sm"
             >
-                <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+                <div class="flex items-center justify-between border-b border-edge px-4 py-3">
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900">
+                        <h3 class="text-base font-semibold text-content">
                             {{ certificate.certificate_type }}
                         </h3>
-                        <p class="text-sm text-gray-500">
+                        <p class="text-sm text-content-muted">
                             أُصدرت في {{ formatDate(certificate.issued_at) }}
                         </p>
                     </div>
                     <StatusBadge :status="certificate.status" :labels="statusLabels" />
                 </div>
                 <div class="px-4 py-3">
-                    <p class="text-xs text-gray-500">رمز التحقق</p>
-                    <p class="font-mono text-sm font-medium text-gray-800">
+                    <p class="text-xs text-content-muted">رمز التحقق</p>
+                    <p class="font-mono text-sm font-medium text-content-strong">
                         {{ certificate.verification_code }}
                     </p>
                 </div>
@@ -69,16 +69,16 @@ function onPageChange(page: number): void {
             <!-- ترقيم صفحات -->
             <div
                 v-if="certificates.last_page > 1"
-                class="flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow-sm"
+                class="flex items-center justify-between rounded-lg bg-surface px-4 py-3 shadow-sm"
             >
-                <span class="text-sm text-gray-500">
+                <span class="text-sm text-content-muted">
                     صفحة {{ certificates.current_page }} من {{ certificates.last_page }}
                 </span>
                 <div class="flex gap-2">
                     <button
                         type="button"
                         :disabled="certificates.current_page <= 1"
-                        class="min-h-[44px] rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-40"
+                        class="min-h-[44px] rounded-md border border-edge-strong px-3 py-1.5 text-sm disabled:opacity-40"
                         @click="onPageChange(certificates.current_page - 1)"
                     >
                         السابق
@@ -86,7 +86,7 @@ function onPageChange(page: number): void {
                     <button
                         type="button"
                         :disabled="certificates.current_page >= certificates.last_page"
-                        class="min-h-[44px] rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:opacity-40"
+                        class="min-h-[44px] rounded-md border border-edge-strong px-3 py-1.5 text-sm disabled:opacity-40"
                         @click="onPageChange(certificates.current_page + 1)"
                     >
                         التالي

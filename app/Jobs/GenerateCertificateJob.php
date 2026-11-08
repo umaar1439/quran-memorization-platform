@@ -1,19 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
 use App\Actions\CreateAuditLogAction;
 use App\Enums\CertificateStatus;
 use App\Models\Certificate;
-use App\Models\FeatureFlag;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Notifications\CertificateIssuedNotification;
+use App\Support\FeatureFlagCache;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -23,17 +27,45 @@ use Spatie\Permission\PermissionRegistrar;
  * (دفاع طبقتين — §4 تهديد #2)، ثم يحفظ الملف على القرص الخاص ويربطه
  * بسجل التدقيق ويُرسل الإشعار.
  */
-class GenerateCertificateJob implements ShouldQueue
+class GenerateCertificateJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * قفل تفرد لكل شهادة: يمنع توليد نفس الشهادة مرتين بالتوازي (كتابة
+     * متعارضة على نفس file_path + إشعار مكرر للطالب). ينتهي تلقائياً بعد
+     * أطول سلسلة محاولات حتى لا تبقى الشهادة معلّقة.
+     */
+    public int $uniqueFor = 900;
+
+    public function uniqueId(): string
+    {
+        return 'certificate:'.$this->certificateId;
+    }
+
+    /**
+     * توليد الشهادة يعتمد على القرص والتخزين؛ نسمح بثلاث محاولات متباعدة
+     * قبل إعلان الفشل النهائي (والذي يُثبّت الحالة على failed).
+     */
+    public int $tries = 3;
+
+    public int $timeout = 120;
+
+    /**
+     * @var list<int>
+     */
+    public array $backoff = [10, 60, 180];
 
     public function __construct(
         public readonly string $certificateId,
         public readonly int $actorId,
     ) {}
 
-    public function handle(): void
-    {
+    public function handle(
+        FeatureFlagCache $flags,
+        PermissionRegistrar $permissions,
+        CreateAuditLogAction $auditLog,
+    ): void {
         $certificate = Certificate::withoutGlobalScopes()->find($this->certificateId);
 
         if (! $certificate) {
@@ -49,7 +81,7 @@ class GenerateCertificateJob implements ShouldQueue
         }
 
         // تعيين سياق المستأجر لفحوصات Spatie داخل الـ queue worker (لا middleware هنا).
-        app(PermissionRegistrar::class)->setPermissionsTeamId($certificate->organization_id);
+        $permissions->setPermissionsTeamId($certificate->organization_id);
 
         // دفاع الطبقة الثانية: إعادة التحقق من الدور والصلاحية والـ feature flag وقت التنفيذ.
         if (! $actor->hasRole('org-admin') && ! $actor->hasRole('super-admin')) {
@@ -64,7 +96,7 @@ class GenerateCertificateJob implements ShouldQueue
             return;
         }
 
-        if (! $this->featureEnabled($certificate->organization_id)) {
+        if (! $flags->enabled($certificate->organization_id, 'certificates.enabled')) {
             $this->markFailed($certificate);
 
             return;
@@ -87,7 +119,7 @@ class GenerateCertificateJob implements ShouldQueue
             'file_path' => $filePath,
         ]);
 
-        app(CreateAuditLogAction::class)->execute(
+        $auditLog->execute(
             organizationId: $certificate->organization_id,
             event: 'certificate.issued',
             auditableType: Certificate::class,
@@ -113,12 +145,20 @@ class GenerateCertificateJob implements ShouldQueue
         $certificate->update(['status' => CertificateStatus::Failed]);
     }
 
-    private function featureEnabled(?int $organizationId): bool
+    /**
+     * يُستدعى بعد استنفاد كل المحاولات — يمنع بقاء الشهادة معلّقة ويُسجّل السياق.
+     */
+    public function failed(?\Throwable $exception): void
     {
-        return (bool) FeatureFlag::withoutGlobalScopes()
-            ->where('organization_id', $organizationId)
-            ->where('key', 'certificates.enabled')
-            ->value('enabled');
+        Log::error('Certificate generation job failed permanently.', [
+            'certificate_id' => $this->certificateId,
+            'actor_id' => $this->actorId,
+            'error' => $exception?->getMessage(),
+        ]);
+
+        Certificate::withoutGlobalScopes()
+            ->whereKey($this->certificateId)
+            ->update(['status' => CertificateStatus::Failed]);
     }
 
     private function renderSimplePdf(StudentProfile $student, string $verificationCode): string

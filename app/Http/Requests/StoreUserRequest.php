@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Enums\UserStatus;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -20,7 +23,7 @@ class StoreUserRequest extends FormRequest
 
         return $user
             ? $this->user()->can('update', $user)
-            : $this->user()->can('create', \App\Models\User::class);
+            : $this->user()->can('create', User::class);
     }
 
     /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 test('public self-registration is disabled — the register route does not exist', function () {
     $this->get('/register')->assertNotFound();
 });
@@ -12,4 +14,3 @@ test('public self-registration submission is rejected', function () {
         'password_confirmation' => 'password',
     ])->assertNotFound();
 });
-

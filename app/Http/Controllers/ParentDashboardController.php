@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\Guardian;
+use App\Queries\ParentChildrenQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,29 +17,17 @@ use Inertia\Response;
 class ParentDashboardController extends Controller
 {
     public function __construct(
-        private readonly \App\Actions\CalculateStudentAnalyticsAction $calculateAnalytics,
+        private readonly ParentChildrenQuery $children,
     ) {}
 
     public function page(Request $request): Response
     {
         $guardian = $request->user()->guardian;
 
-        abort_if(! $guardian, 404, 'لا يوجد ملف ولي أمر مرتبط بهذا المستخدم.');
-
-        $students = $guardian->students()->with(['user', 'mosque', 'circle'])->get();
-
-        $summaries = $students->map(function ($student) {
-            $analytics = $this->calculateAnalytics->execute($student);
-
-            return [
-                'student' => $student,
-                'overall_progress' => $analytics['overall_progress'],
-                'attendance_rate' => $analytics['attendance_rate'],
-            ];
-        });
+        abort_if(! $guardian, 404, __('messages.students.missing_guardian_profile'));
 
         return Inertia::render('Parent/Dashboard', [
-            'children' => $summaries,
+            'children' => $this->children->summaries($guardian),
         ]);
     }
 }

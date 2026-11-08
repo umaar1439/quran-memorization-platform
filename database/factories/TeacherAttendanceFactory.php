@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Models\Mosque;
@@ -8,7 +10,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\TeacherAttendance>
+ * @extends Factory<TeacherAttendance>
  */
 class TeacherAttendanceFactory extends Factory
 {

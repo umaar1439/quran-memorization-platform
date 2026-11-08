@@ -32,55 +32,55 @@ const ratingLabels: Record<string, string> = {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">لوحة التحكم</h2>
+            <h2 class="text-xl font-semibold leading-tight text-content-strong">لوحة التحكم</h2>
         </template>
 
         <div class="mx-auto max-w-7xl space-y-6">
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">المساجد</p>
-                    <p class="mt-1 text-2xl font-bold text-gray-900">{{ stats.mosques_count }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">المساجد</p>
+                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.mosques_count }}</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">الحلقات</p>
-                    <p class="mt-1 text-2xl font-bold text-gray-900">{{ stats.circles_count }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">الحلقات</p>
+                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.circles_count }}</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">الطلاب</p>
-                    <p class="mt-1 text-2xl font-bold text-gray-900">{{ stats.students_count }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">الطلاب</p>
+                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.students_count }}</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">المعلمون</p>
-                    <p class="mt-1 text-2xl font-bold text-gray-900">{{ stats.teachers_count }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">المعلمون</p>
+                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.teachers_count }}</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">تسميعات اليوم</p>
-                    <p class="mt-1 text-2xl font-bold text-teal-700">{{ stats.recitations_today }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">تسميعات اليوم</p>
+                    <p class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ stats.recitations_today }}</p>
                 </div>
-                <div class="rounded-lg bg-white p-4 shadow-sm">
-                    <p class="text-sm text-gray-500">تسميعات هذا الشهر</p>
-                    <p class="mt-1 text-2xl font-bold text-teal-700">{{ stats.recitations_this_month }}</p>
+                <div class="rounded-lg bg-surface p-4 shadow-sm">
+                    <p class="text-sm text-content-muted">تسميعات هذا الشهر</p>
+                    <p class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ stats.recitations_this_month }}</p>
                 </div>
             </div>
 
-            <div class="rounded-lg bg-white shadow-sm">
-                <div class="border-b border-gray-200 px-4 py-3">
-                    <h3 class="text-base font-semibold text-gray-900">آخر التسميعات</h3>
+            <div class="rounded-lg bg-surface shadow-sm">
+                <div class="border-b border-edge px-4 py-3">
+                    <h3 class="text-base font-semibold text-content">آخر التسميعات</h3>
                 </div>
                 <div v-if="recentRecitations.length === 0" class="p-4">
                     <EmptyState title="لا توجد تسميعات حديثة" />
                 </div>
-                <ul v-else class="divide-y divide-gray-100">
+                <ul v-else class="divide-y divide-edge-soft">
                     <li
                         v-for="recitation in recentRecitations"
                         :key="recitation.id"
                         class="flex items-center justify-between px-4 py-3 text-sm"
                     >
                         <div>
-                            <p class="font-medium text-gray-800">
+                            <p class="font-medium text-content-strong">
                                 {{ recitation.student?.user?.name ?? 'طالب' }}
                             </p>
-                            <p class="text-gray-500">
+                            <p class="text-content-muted">
                                 سورة {{ recitation.surah_number }} — الآيات {{ recitation.ayah_from }} إلى {{ recitation.ayah_to }}
                             </p>
                         </div>

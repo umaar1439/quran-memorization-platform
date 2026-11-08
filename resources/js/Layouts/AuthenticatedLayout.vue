@@ -80,16 +80,16 @@ function logout(): void {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-50">
+    <div class="min-h-screen bg-surface-muted">
         <Toast />
 
         <!-- Sidebar (Desktop) -->
         <aside
-            class="fixed inset-y-0 right-0 z-30 hidden w-64 flex-col border-l border-gray-200 bg-white lg:flex"
+            class="fixed inset-y-0 right-0 z-30 hidden w-64 flex-col border-l border-edge bg-surface lg:flex"
         >
-            <div class="flex h-16 items-center gap-2 border-b border-gray-200 px-4">
-                <ApplicationLogo class="h-8 w-8 fill-current text-teal-700" />
-                <span class="text-sm font-semibold text-gray-800">منصة تحفيظ القرآن</span>
+            <div class="flex h-16 items-center gap-2 border-b border-edge px-4">
+                <ApplicationLogo class="h-8 w-8 fill-current text-teal-700 dark:text-teal-300" />
+                <span class="text-sm font-semibold text-content-strong">منصة تحفيظ القرآن</span>
             </div>
             <nav class="flex-1 space-y-1 overflow-y-auto p-3">
                 <Link
@@ -98,8 +98,8 @@ function logout(): void {
                     :href="route(item.routeName)"
                     class="block rounded-md px-3 py-2.5 text-sm font-medium transition"
                     :class="isActive(item.routeName)
-                        ? 'bg-teal-50 text-teal-700'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+                        ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300'
+                        : 'text-content-soft hover:bg-surface-sunken hover:text-content'"
                 >
                     {{ item.label }}
                 </Link>
@@ -109,9 +109,9 @@ function logout(): void {
         <!-- Sidebar (Mobile Drawer) -->
         <div v-if="sidebarOpen" class="fixed inset-0 z-40 lg:hidden">
             <div class="fixed inset-0 bg-black/40" @click="sidebarOpen = false" />
-            <aside class="fixed inset-y-0 right-0 w-64 overflow-y-auto bg-white shadow-xl">
-                <div class="flex h-16 items-center justify-between border-b border-gray-200 px-4">
-                    <span class="text-sm font-semibold text-gray-800">القائمة</span>
+            <aside class="fixed inset-y-0 right-0 w-64 overflow-y-auto bg-surface shadow-xl">
+                <div class="flex h-16 items-center justify-between border-b border-edge px-4">
+                    <span class="text-sm font-semibold text-content-strong">القائمة</span>
                     <button type="button" class="min-h-[44px] min-w-[44px] p-2" @click="sidebarOpen = false">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -125,8 +125,8 @@ function logout(): void {
                         :href="route(item.routeName)"
                         class="block min-h-[44px] rounded-md px-3 py-2.5 text-sm font-medium"
                         :class="isActive(item.routeName)
-                            ? 'bg-teal-50 text-teal-700'
-                            : 'text-gray-600 hover:bg-gray-100'"
+                            ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300'
+                            : 'text-content-soft hover:bg-surface-sunken'"
                         @click="sidebarOpen = false"
                     >
                         {{ item.label }}
@@ -137,10 +137,10 @@ function logout(): void {
 
         <div class="lg:pr-64">
             <!-- Header -->
-            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4">
+            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-edge bg-surface px-4">
                 <button
                     type="button"
-                    class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 lg:hidden"
+                    class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-content-muted hover:bg-surface-sunken lg:hidden"
                     @click="sidebarOpen = true"
                 >
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,16 +150,16 @@ function logout(): void {
 
                 <div class="flex items-center gap-3">
                     <OfflineIndicator />
-                    <span class="text-sm font-medium text-gray-700">{{ user.name }}</span>
+                    <span class="text-sm font-medium text-content-body">{{ user.name }}</span>
                     <Link
                         :href="route('profile.edit')"
-                        class="hidden text-sm text-gray-500 hover:text-gray-700 sm:inline"
+                        class="hidden text-sm text-content-muted hover:text-content-body sm:inline"
                     >
                         الملف الشخصي
                     </Link>
                     <button
                         type="button"
-                        class="min-h-[44px] rounded-md px-3 text-sm font-medium text-red-600 hover:bg-red-50"
+                        class="min-h-[44px] rounded-md px-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
                         @click="logout"
                     >
                         خروج
@@ -167,7 +167,7 @@ function logout(): void {
                 </div>
             </header>
 
-            <header v-if="$slots.header" class="border-b border-gray-200 bg-white">
+            <header v-if="$slots.header" class="border-b border-edge bg-surface">
                 <div class="px-4 py-6">
                     <slot name="header" />
                 </div>

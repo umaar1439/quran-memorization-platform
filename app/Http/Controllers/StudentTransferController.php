@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Actions\TransferStudentAction;
 use App\Http\Requests\TransferStudentRequest;
-use App\Models\Mosque;
-use App\Models\StudentProfile;
+use App\Http\Resources\StudentTransferResource;
 use App\Models\StudentTransfer;
+use App\Queries\MosqueOptionsQuery;
+use App\Queries\StudentTransferQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +24,8 @@ class StudentTransferController extends Controller
 {
     public function __construct(
         private readonly TransferStudentAction $transferStudent,
+        private readonly StudentTransferQuery $transfers,
+        private readonly MosqueOptionsQuery $mosqueOptions,
     ) {}
 
     public function store(TransferStudentRequest $request): JsonResponse
@@ -30,24 +36,18 @@ class StudentTransferController extends Controller
             $request,
         );
 
-        return response()->json([
-            'data' => $transfer,
-        ], 201);
+        return (new StudentTransferResource($transfer))->response()->setStatusCode(201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', StudentTransfer::class);
 
-        $query = StudentTransfer::query();
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->integer('student_id'));
-        }
-
-        return response()->json([
-            'data' => $query->latest('transferred_at')->paginate(20),
-        ]);
+        return StudentTransferResource::collection(
+            $this->transfers->paginate(
+                $request->filled('student_id') ? $request->integer('student_id') : null,
+            ),
+        );
     }
 
     /**
@@ -57,16 +57,13 @@ class StudentTransferController extends Controller
     {
         $this->authorize('viewAny', StudentTransfer::class);
 
-        $query = StudentTransfer::query()->with(['student.user', 'fromMosque', 'toMosque']);
-
-        if ($request->filled('student_id')) {
-            $query->where('student_id', $request->integer('student_id'));
-        }
-
         return Inertia::render('Admin/StudentTransfers/Index', [
-            'transfers' => $query->latest('transferred_at')->paginate(20)->withQueryString(),
-            'mosques' => Mosque::query()->orderBy('name')->get(['id', 'name']),
-            'students' => StudentProfile::query()->with('user')->get(['id', 'user_id', 'mosque_id', 'circle_id']),
+            'transfers' => $this->transfers->paginate(
+                $request->filled('student_id') ? $request->integer('student_id') : null,
+                withQueryString: true,
+            ),
+            'mosques' => $this->mosqueOptions->all(),
+            'students' => $this->transfers->studentOptions(),
         ]);
     }
 }

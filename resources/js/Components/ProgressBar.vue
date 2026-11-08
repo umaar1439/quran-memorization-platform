@@ -37,14 +37,14 @@ const colorClasses: Record<string, string> = {
 <template>
     <div class="w-full">
         <div v-if="label || showPercentage" class="mb-1 flex items-center justify-between text-sm">
-            <span v-if="label" class="text-gray-600">{{ label }}</span>
-            <span v-if="showPercentage" class="font-medium text-gray-800">{{ percentage }}%</span>
+            <span v-if="label" class="text-content-soft">{{ label }}</span>
+            <span v-if="showPercentage" class="font-medium text-content-strong">{{ percentage }}%</span>
         </div>
-        <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-200">
+        <div class="h-2.5 w-full overflow-hidden rounded-full bg-edge">
             <div
                 :class="colorClasses[color]"
                 :style="{ width: `${percentage}%` }"
-                class="h-full rounded-full transition-all duration-300"
+                class="h-full rounded-full transition-all duration-200"
             />
         </div>
     </div>

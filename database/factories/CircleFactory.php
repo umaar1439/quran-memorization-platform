@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Enums\GenericStatus;
+use App\Models\Circle;
 use App\Models\Mosque;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Circle>
+ * @extends Factory<Circle>
  */
 class CircleFactory extends Factory
 {
@@ -28,7 +31,7 @@ class CircleFactory extends Factory
      */
     public function configure(): static
     {
-        return $this->afterMaking(function (\App\Models\Circle $circle) {
+        return $this->afterMaking(function (Circle $circle) {
             if (! $circle->organization_id && $circle->mosque_id) {
                 $circle->organization_id = Mosque::withoutGlobalScopes()->find($circle->mosque_id)?->organization_id;
             }

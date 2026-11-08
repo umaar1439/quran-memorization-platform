@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Circle;
 use App\Models\Mosque;
 use App\Models\Organization;
@@ -7,6 +9,7 @@ use App\Models\TeacherProfile;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
@@ -119,7 +122,7 @@ test('a teacher cannot be assigned circles from another organization (tenant iso
     $circleB = Circle::factory()->create(['organization_id' => $orgB->id, 'mosque_id' => $mosqueB->id]);
 
     $adminA = User::factory()->create(['organization_id' => $orgA->id]);
-    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
     $adminA->assignRole($rolesA['org-admin']);
 
     $this->actingAs($adminA)
@@ -147,7 +150,7 @@ test('a student cannot be assigned a circle from another organization (tenant is
     $circleB = Circle::factory()->create(['organization_id' => $orgB->id, 'mosque_id' => $mosqueB->id]);
 
     $adminA = User::factory()->create(['organization_id' => $orgA->id]);
-    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
     $adminA->assignRole($rolesA['org-admin']);
 
     $this->actingAs($adminA)
@@ -184,7 +187,7 @@ test('an org-admin cannot update a teacher from another organization (tenant iso
     ]);
 
     $adminA = User::factory()->create(['organization_id' => $orgA->id]);
-    app(\Spatie\Permission\PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($orgA->id);
     $adminA->assignRole($rolesA['org-admin']);
 
     $this->actingAs($adminA)

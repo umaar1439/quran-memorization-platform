@@ -108,10 +108,10 @@ function onAyahToChange(value: string): void {
                 @update:model-value="onAyahToChange($event)"
             />
         </div>
-        <p v-if="selectedSurah" class="text-xs text-gray-500">
+        <p v-if="selectedSurah" class="text-xs text-content-muted">
             عدد آيات {{ selectedSurah.nameArabic }}: {{ selectedSurah.ayahCount }}
         </p>
-        <p v-else class="text-xs text-gray-400">
+        <p v-else class="text-xs text-content-faint">
             اختر السورة أولاً لعرض أرقام الآيات المتاحة.
         </p>
     </div>

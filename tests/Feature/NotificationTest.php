@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\ExamResultStatus;
 use App\Enums\ExamStatus;
 use App\Enums\GoalStatus;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Factories;
 
 use App\Enums\RecitationRating;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends Factory<\App\Models\Recitation>
+ * @extends Factory<Recitation>
  */
 class RecitationFactory extends Factory
 {

@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Models\Circle;
+use App\Queries\TeacherCircleQuery;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,15 +15,14 @@ use Inertia\Response;
  */
 class TeacherCircleController extends Controller
 {
+    public function __construct(
+        private readonly TeacherCircleQuery $circles,
+    ) {}
+
     public function page(Request $request): Response
     {
-        $circles = Circle::query()
-            ->with(['mosque', 'studentProfiles.user'])
-            ->where('teacher_id', $request->user()->id)
-            ->get();
-
         return Inertia::render('Teacher/MyCircle', [
-            'circles' => $circles,
+            'circles' => $this->circles->forTeacher($request->user()),
         ]);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -17,22 +19,7 @@ class SecurityHeaders
     {
         $response = $next($request);
 
-        $response->headers->set(
-            'Content-Security-Policy',
-            implode('; ', [
-                "default-src 'self'",
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-                "style-src 'self' 'unsafe-inline'",
-                "img-src 'self' data: blob:",
-                "font-src 'self' data:",
-                "connect-src 'self' ws: wss:",
-                "frame-ancestors 'none'",
-                "base-uri 'self'",
-                "form-action 'self'",
-            ])
-        );
-
-        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        $response->headers->set('Content-Security-Policy', $this->contentSecurityPolicy());
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -41,6 +28,39 @@ class SecurityHeaders
             'geolocation=(), microphone=(), camera=(), payment=()'
         );
 
+        // HSTS يُرسل في الإنتاج فقط: إرساله على http محلي أو نطاق فرعي غير
+        // مؤمَّن قد يقفل المتصفح على HTTPS غير متاح (RFC 6797 §7.2).
+        if (app()->isProduction()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
         return $response;
+    }
+
+    /**
+     * CSP متوافق مع Vite في التطوير (HMR يحتاج eval + WebSocket) وصارم في
+     * الإنتاج (بلا unsafe-eval). Vite يضيف nonce تلقائياً لسكربتاته عند البناء.
+     */
+    private function contentSecurityPolicy(): string
+    {
+        $scriptSrc = app()->isProduction()
+            ? "'self' 'unsafe-inline'"
+            : "'self' 'unsafe-inline' 'unsafe-eval'";
+
+        $connectSrc = app()->isProduction()
+            ? "'self'"
+            : "'self' ws: wss:";
+
+        return implode('; ', [
+            "default-src 'self'",
+            "script-src {$scriptSrc}",
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob:",
+            "font-src 'self' data:",
+            "connect-src {$connectSrc}",
+            "frame-ancestors 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+        ]);
     }
 }

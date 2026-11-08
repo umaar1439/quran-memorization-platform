@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
+use App\DTOs\StudentData;
 use App\Enums\StudentStatus;
 use App\Models\StudentProfile;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,5 +48,13 @@ class StoreStudentRequest extends FormRequest
             'current_juz' => ['nullable', 'integer', 'min:1', 'max:30'],
             'status' => ['required', Rule::enum(StudentStatus::class)],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toDto(): StudentData
+    {
+        return StudentData::fromArray($this->validated());
     }
 }

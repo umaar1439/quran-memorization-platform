@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Enums\UserStatus;
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -114,8 +118,8 @@ class User extends Authenticatable
      */
     public function homeRouteName(): string
     {
-        $roleNames = \Spatie\Permission\Models\Role::withoutGlobalScopes()
-            ->whereIn('id', \Illuminate\Support\Facades\DB::table('model_has_roles')
+        $roleNames = Role::withoutGlobalScopes()
+            ->whereIn('id', DB::table('model_has_roles')
                 ->where('model_type', self::class)
                 ->where('model_id', $this->id)
                 ->pluck('role_id'))

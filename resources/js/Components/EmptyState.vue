@@ -12,7 +12,7 @@ withDefaults(
 
 <template>
     <div class="flex flex-col items-center justify-center px-4 py-12 text-center">
-        <div class="mb-4 text-gray-400">
+        <div class="mb-4 text-content-faint">
             <slot name="icon">
                 <svg class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -24,8 +24,8 @@ withDefaults(
                 </svg>
             </slot>
         </div>
-        <h3 class="text-base font-semibold text-gray-900">{{ title }}</h3>
-        <p v-if="description" class="mt-1 text-sm text-gray-500">
+        <h3 class="text-base font-semibold text-content">{{ title }}</h3>
+        <p v-if="description" class="mt-1 text-sm text-content-muted">
             {{ description }}
         </p>
         <div v-if="$slots.action" class="mt-4">

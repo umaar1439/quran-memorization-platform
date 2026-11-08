@@ -1,3 +1,80 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * ألوان دلالية مركزية (Design Tokens).
+ * القيم مخزّنة كقنوات RGB حتى تعمل معدّلات الشفافية في Tailwind
+ * (مثال: bg-surface/80)، وهي مطابقة تماماً لألوان Tailwind الحالية في الوضع
+ * النهاري حتى لا يتغيّر شكل الواجهة، ثم تُستبدل تلقائياً في الوضع الليلي.
+ *
+ * الاستخدام في المكوّنات: bg-surface, bg-surface-muted, bg-surface-sunken,
+ * text-content, text-content-strong/body/soft/muted/faint,
+ * border-edge, border-edge-strong, border-edge-soft, divide-edge, ...
+ */
+:root {
+    color-scheme: light;
+
+    --color-surface: 255 255 255; /* white */
+    --color-surface-muted: 249 250 251; /* gray-50 */
+    --color-surface-sunken: 243 244 246; /* gray-100 */
+
+    --color-content: 17 24 39; /* gray-900 */
+    --color-content-strong: 31 41 55; /* gray-800 */
+    --color-content-body: 55 65 81; /* gray-700 */
+    --color-content-soft: 75 85 99; /* gray-600 */
+    --color-content-muted: 107 114 128; /* gray-500 */
+    --color-content-faint: 156 163 175; /* gray-400 */
+
+    --color-edge: 229 231 235; /* gray-200 */
+    --color-edge-strong: 209 213 219; /* gray-300 */
+    --color-edge-soft: 243 244 246; /* gray-100 */
+}
+
+/* الوضع الليلي: يتبع إعداد النظام، ونفس أسماء المتغيّرات بقيم معكوسة */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+
+        --color-surface: 31 41 55; /* gray-800 */
+        --color-surface-muted: 17 24 39; /* gray-900 */
+        --color-surface-sunken: 55 65 81; /* gray-700 */
+
+        --color-content: 249 250 251; /* gray-50 */
+        --color-content-strong: 243 244 246; /* gray-100 */
+        --color-content-body: 229 231 235; /* gray-200 */
+        --color-content-soft: 209 213 219; /* gray-300 */
+        --color-content-muted: 156 163 175; /* gray-400 */
+        --color-content-faint: 107 114 128; /* gray-500 */
+
+        --color-edge: 55 65 81; /* gray-700 */
+        --color-edge-strong: 75 85 99; /* gray-600 */
+        --color-edge-soft: 31 41 55; /* gray-800 */
+    }
+}
+
+@layer base {
+    /*
+     * خلفية/لون نص الصفحة من نفس المتغيّرات، حتى تغطي الوضع الليلي الصفحات
+     * التي لا تحدّد خلفيتها بنفسها.
+     */
+    body {
+        @apply bg-surface text-content;
+    }
+}
+
+/*
+ * احترام تفضيل "تقليل الحركة" على مستوى النظام (WCAG 2.3.3): يُعطّل الحركات
+ * والانتقالات مركزياً بدل تكرار الاستثناء في كل مكوّن، ويُبقي الحالة النهائية
+ * ظاهرة (لا نستخدم display:none حتى لا تختفي عناصر تعتمد على animationend).
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

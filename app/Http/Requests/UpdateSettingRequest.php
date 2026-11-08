@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Models\Setting;
@@ -36,9 +38,27 @@ class UpdateSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'key' => ['required', 'string', Rule::in(self::ALLOWED_KEYS)],
-            'value' => ['required', 'string', 'max:1000'],
-            'group' => ['nullable', 'string', 'max:100'],
+            'settings' => ['required', 'array', 'min:1'],
+            'settings.*.key' => ['required', 'string', 'max:120', Rule::in(self::ALLOWED_KEYS)],
+            'settings.*.value' => ['nullable', 'string', 'max:2000'],
+            'settings.*.group' => ['nullable', 'string', 'max:80'],
         ];
+    }
+
+    /**
+     * الإعدادات المُصادَق عليها بصيغة DTO خفيفة (مصفوفة مفاتيح مسموحة صراحةً).
+     *
+     * @return list<array{key: string, value: string|null, group: string|null}>
+     */
+    public function settings(): array
+    {
+        /** @var array<int, array{key: string, value?: string|null, group?: string|null}> $items */
+        $items = $this->validated('settings');
+
+        return array_values(array_map(static fn (array $item): array => [
+            'key' => $item['key'],
+            'value' => $item['value'] ?? null,
+            'group' => $item['group'] ?? null,
+        ], $items));
     }
 }

@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use App\Enums\ExamStatus;
+use App\Actions\CreateExamAction;
+use App\Actions\UpdateExamAction;
 use App\Http\Requests\StoreExamRequest;
 use App\Http\Requests\UpdateExamRequest;
-use App\Models\Circle;
+use App\Http\Resources\ExamResource;
 use App\Models\Exam;
-use App\Models\ExamSection;
-use App\Models\Mosque;
+use App\Queries\CircleOptionsQuery;
+use App\Queries\ExamDirectoryQuery;
+use App\Queries\MosqueOptionsQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,76 +27,45 @@ use Inertia\Response;
  */
 class ExamController extends Controller
 {
+    public function __construct(
+        private readonly ExamDirectoryQuery $exams,
+        private readonly MosqueOptionsQuery $mosqueOptions,
+        private readonly CircleOptionsQuery $circles,
+        private readonly CreateExamAction $createExam,
+        private readonly UpdateExamAction $updateExam,
+    ) {}
+
     public function store(StoreExamRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        $exam = $this->createExam->execute($request->validated(), $request->user());
 
-        $exam = DB::transaction(function () use ($data, $request) {
-            $exam = Exam::create([
-                'mosque_id' => $data['mosque_id'] ?? null,
-                'circle_id' => $data['circle_id'] ?? null,
-                'title' => $data['title'],
-                'exam_type' => $data['exam_type'],
-                'scheduled_at' => $data['scheduled_at'] ?? null,
-                'status' => ExamStatus::Draft,
-                'created_by' => $request->user()->id,
-            ]);
-
-            foreach ($data['sections'] ?? [] as $section) {
-                ExamSection::withoutGlobalScopes()->create([
-                    'exam_id' => $exam->id,
-                    'organization_id' => $exam->organization_id,
-                    'surah_number' => $section['surah_number'],
-                    'ayah_from' => $section['ayah_from'],
-                    'ayah_to' => $section['ayah_to'],
-                    'section_type' => $section['section_type'],
-                    'max_score' => $section['max_score'],
-                ]);
-            }
-
-            return $exam;
-        });
-
-        return response()->json([
-            'data' => $exam->load('sections'),
-        ], 201);
+        return (new ExamResource($exam->load('sections')))->response()->setStatusCode(201);
     }
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Exam::class);
 
-        $query = Exam::query();
-
-        if ($request->filled('circle_id')) {
-            $query->where('circle_id', $request->integer('circle_id'));
-        }
-
-        if ($request->filled('mosque_id')) {
-            $query->where('mosque_id', $request->integer('mosque_id'));
-        }
-
-        return response()->json([
-            'data' => $query->latest('scheduled_at')->paginate(20),
-        ]);
+        return ExamResource::collection(
+            $this->exams->paginate(
+                $request->filled('circle_id') ? $request->integer('circle_id') : null,
+                $request->filled('mosque_id') ? $request->integer('mosque_id') : null,
+            ),
+        );
     }
 
     public function show(Exam $exam): JsonResponse
     {
         $this->authorize('view', $exam);
 
-        return response()->json([
-            'data' => $exam->load(['sections', 'results']),
-        ]);
+        return (new ExamResource($exam->load(['sections', 'results'])))->response();
     }
 
     public function update(UpdateExamRequest $request, Exam $exam): JsonResponse
     {
-        $exam->update($request->validated());
+        $exam = $this->updateExam->execute($exam, $request->validated());
 
-        return response()->json([
-            'data' => $exam,
-        ]);
+        return (new ExamResource($exam))->response();
     }
 
     /**
@@ -103,20 +76,13 @@ class ExamController extends Controller
     {
         $this->authorize('viewAny', Exam::class);
 
-        $query = Exam::query()->with(['mosque', 'circle']);
-
-        if ($request->filled('circle_id')) {
-            $query->where('circle_id', $request->integer('circle_id'));
-        }
-
-        if ($request->filled('mosque_id')) {
-            $query->where('mosque_id', $request->integer('mosque_id'));
-        }
-
         return Inertia::render('Admin/Exams/Index', [
-            'exams' => $query->latest('scheduled_at')->paginate(20)->withQueryString(),
-            'mosques' => Mosque::query()->orderBy('name')->get(['id', 'name']),
-            'circles' => Circle::query()->orderBy('name')->get(['id', 'name', 'mosque_id']),
+            'exams' => $this->exams->paginate(
+                $request->filled('circle_id') ? $request->integer('circle_id') : null,
+                $request->filled('mosque_id') ? $request->integer('mosque_id') : null,
+            )->withQueryString(),
+            'mosques' => $this->mosqueOptions->all(),
+            'circles' => $this->circles->options(),
             'filters' => $request->only('circle_id', 'mosque_id'),
         ]);
     }

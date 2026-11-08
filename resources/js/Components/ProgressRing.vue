@@ -32,7 +32,7 @@ const center = computed(() => props.size / 2);
                 :cy="center"
                 :r="radius"
                 fill="none"
-                stroke="#e5e7eb"
+                stroke="rgb(var(--color-edge))"
                 :stroke-width="strokeWidth"
             />
             <circle
@@ -46,18 +46,18 @@ const center = computed(() => props.size / 2);
                 :stroke-dasharray="circumference"
                 :stroke-dashoffset="offset"
                 :transform="`rotate(-90 ${center} ${center})`"
-                class="transition-all duration-500"
+                class="transition-all duration-[250ms]"
             />
             <text
                 :x="center"
                 :y="center"
                 text-anchor="middle"
                 dominant-baseline="middle"
-                class="fill-gray-800 text-2xl font-bold"
+                class="fill-content text-2xl font-bold"
             >
                 {{ clamped }}%
             </text>
         </svg>
-        <span v-if="label" class="mt-2 text-sm text-gray-600">{{ label }}</span>
+        <span v-if="label" class="mt-2 text-sm text-content-soft">{{ label }}</span>
     </div>
 </template>

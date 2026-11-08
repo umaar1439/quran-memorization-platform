@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Circle;
 use App\Models\Mosque;
 use App\Models\Organization;
@@ -224,7 +226,7 @@ test('concurrency: simultaneous identical recitation requests produce exactly on
     expect(count(array_unique($ids)))->toBe(1);
 
     // 3) سجل واحد فقط في جدول recitations لهذا المفتاح.
-    $pdo = new \PDO('sqlite:'.$dbFile);
+    $pdo = new PDO('sqlite:'.$dbFile);
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM recitations WHERE idempotency_key = ?');
     $stmt->execute([$key]);
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use App\Enums\GoalTargetType;
@@ -47,7 +49,7 @@ class StoreStudentGoalRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             if (! $this->input('surah_id') && ! $this->input('juz_number')) {
-                $validator->errors()->add('surah_id', 'يجب تحديد نطاق الهدف: سورة أو جزء.');
+                $validator->errors()->add('surah_id', __('messages.goals.scope_required'));
             }
         });
     }

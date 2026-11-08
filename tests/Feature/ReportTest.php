@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\ReportStatus;
 use App\Jobs\GenerateReportJob;
 use App\Models\Organization;
@@ -76,7 +78,8 @@ test('GenerateReportJob completes and stores a downloadable file', function () {
         'status' => ReportStatus::Queued,
     ]);
 
-    (new GenerateReportJob($report->id, $supervisor->id))->handle();
+    // الحاوية تحقن تبعيات handle() كما يفعل الطابور تماماً.
+    app()->call([new GenerateReportJob($report->id, $supervisor->id), 'handle']);
 
     $report->refresh();
     expect($report->status)->toBe(ReportStatus::Completed);
@@ -106,7 +109,8 @@ test('GenerateReportJob fails if the requesting user no longer has permission (d
     $supervisor->syncPermissions([]);
     $supervisor->syncRoles([]);
 
-    (new GenerateReportJob($report->id, $supervisor->id))->handle();
+    // الحاوية تحقن تبعيات handle() كما يفعل الطابور تماماً.
+    app()->call([new GenerateReportJob($report->id, $supervisor->id), 'handle']);
 
     $report->refresh();
     expect($report->status)->toBe(ReportStatus::Failed);
