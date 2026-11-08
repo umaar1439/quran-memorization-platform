@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import BrandMark from '@/Components/BrandMark.vue';
 import AppButton from '@/Components/AppButton.vue';
 import AppIcon, { type IconName } from '@/Components/AppIcon.vue';
+import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 defineProps<{
     canLogin?: boolean;
@@ -31,6 +32,7 @@ const features: Feature[] = [
             <div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                 <BrandMark href="/" label="تحفيظ" />
                 <nav class="flex items-center gap-2" aria-label="روابط الدخول">
+                    <ThemeToggle />
                     <AppButton v-if="canLogin" :href="route('login')" size="sm">تسجيل الدخول</AppButton>
                 </nav>
             </div>

@@ -5,10 +5,12 @@ import rtl from 'tailwindcss-rtl';
 /** @type {import('tailwindcss').Config} */
 export default {
     /*
-     * الوضع الليلي يتبع إعداد النظام تلقائياً (لا حاجة لتبديل يدوي أو JS)،
-     * وتُعرَّف قيم الألوان في resources/css/app.css عبر متغيرات CSS.
+     * الوضع الليلي اختياري بالكامل: يُفعّل بإضافة الصنف `dark` على <html>
+     * (انظر resources/js/Composables/useTheme.ts)، ويُحفظ اختيار المستخدم في
+     * متصفحه، والافتراضي نهاري دائماً. قيم الألوان في resources/css/app.css
+     * عبر متغيّرات CSS، فتتبدّل تلقائياً مع الصنف.
      */
-    darkMode: 'media',
+    darkMode: 'class',
 
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',

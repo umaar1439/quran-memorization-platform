@@ -33,28 +33,34 @@
     --color-scrim: 15 23 42; /* slate-900 */
 }
 
-/* الوضع الليلي: يتبع إعداد النظام، ونفس أسماء المتغيّرات بقيم معكوسة */
-@media (prefers-color-scheme: dark) {
-    :root {
-        color-scheme: dark;
+/*
+ * الوضع الليلي (اختياري): يُفعّل بإضافة الصنف `dark` على عنصر <html> فقط،
+ * لا باتباع إعداد النظام، لأن القرار للمستخدم (افتراضياً: نهاري).
+ * نفس أسماء المتغيّرات بقيم معكوسة، فيتبدّل كل شيء في الواجهة معاً.
+ */
+:root.dark {
+    color-scheme: dark;
+}
 
-        --color-surface: 31 41 55; /* gray-800 */
-        --color-surface-muted: 17 24 39; /* gray-900 */
-        --color-surface-sunken: 55 65 81; /* gray-700 */
+.dark {
+    color-scheme: dark;
 
-        --color-content: 249 250 251; /* gray-50 */
-        --color-content-strong: 243 244 246; /* gray-100 */
-        --color-content-body: 229 231 235; /* gray-200 */
-        --color-content-soft: 209 213 219; /* gray-300 */
-        --color-content-muted: 156 163 175; /* gray-400 */
-        --color-content-faint: 107 114 128; /* gray-500 */
+    --color-surface: 31 41 55; /* gray-800 */
+    --color-surface-muted: 17 24 39; /* gray-900 */
+    --color-surface-sunken: 55 65 81; /* gray-700 */
 
-        --color-edge: 55 65 81; /* gray-700 */
-        --color-edge-strong: 75 85 99; /* gray-600 */
-        --color-edge-soft: 31 41 55; /* gray-800 */
+    --color-content: 249 250 251; /* gray-50 */
+    --color-content-strong: 243 244 246; /* gray-100 */
+    --color-content-body: 229 231 235; /* gray-200 */
+    --color-content-soft: 209 213 219; /* gray-300 */
+    --color-content-muted: 156 163 175; /* gray-400 */
+    --color-content-faint: 107 114 128; /* gray-500 */
 
-        --color-scrim: 2 6 23; /* slate-950 */
-    }
+    --color-edge: 55 65 81; /* gray-700 */
+    --color-edge-strong: 75 85 99; /* gray-600 */
+    --color-edge-soft: 31 41 55; /* gray-800 */
+
+    --color-scrim: 2 6 23; /* slate-950 */
 }
 
 @layer base {

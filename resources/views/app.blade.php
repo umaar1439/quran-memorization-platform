@@ -8,11 +8,34 @@
 
         <!-- PWA (Phase 12: PWA والمزامنة Offline) -->
         <link rel="manifest" href="/manifest.json">
-        <!-- لون شريط المتصفح على الجوال: يتبع الوضع الفاتح/الليلي للنظام -->
-        <meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)">
-        <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+        <!-- لون شريط المتصفح على الجوال: يحدّثه سكربت الثيم أدناه حسب اختيار المستخدم -->
+        <meta name="theme-color" content="#0f766e">
         <link rel="icon" href="/icons/icon-192.png">
         <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+        <!--
+            الثيم: الافتراضي نهاري، والوضع الليلي يُفعّل فقط باختيار المستخدم
+            (يُحفظ في localStorage). يُطبَّق هنا قبل تحميل الأنماط لمنع وميض
+            الوضع النهاري عند فتح التطبيق في وضع ليلي.
+        -->
+        <script>
+            (function () {
+                try {
+                    var isDark = window.localStorage.getItem('theme') === 'dark';
+                    var root = document.documentElement;
+
+                    root.classList.toggle('dark', isDark);
+                    root.style.colorScheme = isDark ? 'dark' : 'light';
+
+                    var meta = document.querySelector('meta[name="theme-color"]');
+                    if (meta) {
+                        meta.setAttribute('content', isDark ? '#111827' : '#0f766e');
+                    }
+                } catch (e) {
+                    // التخزين المحلي معطّل (تصفح متخفٍّ): يبقى الوضع النهاري الافتراضي.
+                }
+            })();
+        </script>
 
         <!-- Fonts: IBM Plex Sans Arabic (العربية + اللاتينية) مع Figtree كاحتياطي -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>

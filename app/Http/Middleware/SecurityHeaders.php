@@ -51,12 +51,17 @@ class SecurityHeaders
             ? "'self'"
             : "'self' ws: wss:";
 
+        /*
+         * الخطوط: ورقعة الأنماط من fonts.bunny.net وملفات woff2 من cdn.jsdelivr.net.
+         * بلا هذين الأصلين يحجب المتصفح الخط ويُعرض النص بخط النظام (CSP أعلاه
+         * يقصر style-src/font-src على 'self').
+         */
         return implode('; ', [
             "default-src 'self'",
             "script-src {$scriptSrc}",
-            "style-src 'self' 'unsafe-inline'",
+            "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
             "img-src 'self' data: blob:",
-            "font-src 'self' data:",
+            "font-src 'self' data: https://cdn.jsdelivr.net",
             "connect-src {$connectSrc}",
             "frame-ancestors 'none'",
             "base-uri 'self'",
