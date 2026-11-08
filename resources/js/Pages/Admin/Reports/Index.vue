@@ -78,11 +78,11 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-content-strong">التقارير</h2>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">التقارير</h2>
                 <button
                     type="button"
-                    class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                    class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     @click="showModal = true"
                 >
                     + طلب تقرير جديد
@@ -107,7 +107,7 @@ function onPageChange(page: number): void {
                     <button
                         v-if="(row as unknown as Report).status === 'completed'"
                         type="button"
-                        class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline"
+                        class="link"
                         @click="downloadReport(row as unknown as Report)"
                     >
                         تنزيل
@@ -121,10 +121,10 @@ function onPageChange(page: number): void {
                 <h3 class="mb-4 text-lg font-semibold text-content">طلب تقرير جديد</h3>
                 <FormSelect id="report-type" v-model="form.report_type" label="نوع التقرير" :options="reportTypeOptions" required :error="errors.report_type" />
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
                         إلغاء
                     </button>
-                    <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                    <button type="submit" :disabled="processing" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard">
                         إرسال الطلب
                     </button>
                 </div>

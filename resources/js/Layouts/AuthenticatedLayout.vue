@@ -1,181 +1,52 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import OfflineIndicator from '@/Components/OfflineIndicator.vue';
+import { ref } from 'vue';
 import Toast from '@/Components/Toast.vue';
-import type { PageProps } from '@/Types';
+import AppSidebar from '@/Layouts/Partials/AppSidebar.vue';
+import AppTopBar from '@/Layouts/Partials/AppTopBar.vue';
+import AppMobileNav from '@/Layouts/Partials/AppMobileNav.vue';
+import AppMobileDrawer from '@/Layouts/Partials/AppMobileDrawer.vue';
 
-interface NavItem {
-    label: string;
-    routeName: string;
-    href?: string;
-}
-
-const page = usePage<PageProps>();
-const sidebarOpen = ref(false);
-
-const roles = computed(() => page.props.auth.roles ?? []);
-const user = computed(() => page.props.auth.user);
-
-function has(role: string): boolean {
-    return roles.value.includes(role);
-}
-
-const adminNav: NavItem[] = [
-    { label: 'لوحة التحكم', routeName: 'admin.dashboard' },
-    { label: 'المساجد', routeName: 'admin.mosques.index' },
-    { label: 'الحلقات', routeName: 'admin.circles.index' },
-    { label: 'المعلمون', routeName: 'admin.teachers.index' },
-    { label: 'الطلاب', routeName: 'admin.students.index' },
-    { label: 'المستخدمون', routeName: 'admin.users.index' },
-    { label: 'الإعدادات', routeName: 'admin.settings.index' },
-    { label: 'Feature Flags', routeName: 'admin.feature-flags.index' },
-    { label: 'التقارير', routeName: 'admin.reports.page' },
-    { label: 'سجل التدقيق', routeName: 'admin.audit-logs.page' },
-];
-
-const supervisorNav: NavItem[] = [
-    { label: 'لوحة التحكم', routeName: 'admin.dashboard' },
-    { label: 'المساجد', routeName: 'admin.mosques.index' },
-    { label: 'الحلقات', routeName: 'admin.circles.index' },
-    { label: 'المعلمون', routeName: 'admin.teachers.index' },
-    { label: 'الطلاب', routeName: 'admin.students.index' },
-    { label: 'التقارير', routeName: 'admin.reports.page' },
-];
-
-const teacherNav: NavItem[] = [
-    { label: 'لوحة التحكم', routeName: 'teacher.dashboard' },
-    { label: 'تسميع سريع', routeName: 'teacher.quick-recitation' },
-    { label: 'حلقتي', routeName: 'teacher.my-circle' },
-    { label: 'الحضور', routeName: 'teacher.attendance.page' },
-];
-
-const studentNav: NavItem[] = [
-    { label: 'لوحتي', routeName: 'student.dashboard' },
-    { label: 'أهدافي', routeName: 'student.goals' },
-    { label: 'امتحاناتي', routeName: 'student.exams' },
-    { label: 'شهاداتي', routeName: 'student.certificates' },
-];
-
-const parentNav: NavItem[] = [{ label: 'أبنائي', routeName: 'parent.dashboard' }];
-
-const navItems = computed<NavItem[]>(() => {
-    if (has('org-admin') || has('super-admin')) return adminNav;
-    if (has('supervisor')) return supervisorNav;
-    if (has('teacher')) return teacherNav;
-    if (has('student')) return studentNav;
-    if (has('parent')) return parentNav;
-
-    return [];
-});
-
-function isActive(routeName: string): boolean {
-    return route().current(`${routeName}*`) || route().current(routeName);
-}
-
-function logout(): void {
-    router.post(route('logout'));
-}
+/**
+ * تخطيط الصفحات بعد تسجيل الدخول — هيكل متكيّف واحد:
+ * - حاسب (lg+): شريط جانبي ثابت + شريط علوي لاصق.
+ * - جوال/تابلت: شريط علوي + شريط تنقل سفلي (4 عناصر + المزيد) + درج كامل.
+ * الارتفاع بـ dvh (لا 100vh) حتى لا يُقتطع المحتوى خلف شريط المتصفح على الجوال،
+ * والمحتوى الرئيسي محجوز له هامش سفلي بمقدار شريط التنقل.
+ */
+const drawerOpen = ref(false);
 </script>
 
 <template>
-    <div class="min-h-screen bg-surface-muted">
-        <Toast />
-
-        <!-- Sidebar (Desktop) -->
-        <aside
-            class="fixed inset-y-0 right-0 z-30 hidden w-64 flex-col border-l border-edge bg-surface lg:flex"
+    <div class="min-h-dvh bg-surface-muted">
+        <a
+            href="#main-content"
+            class="sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-toast focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-content focus:shadow-raised focus:ring-2 focus:ring-teal-700"
         >
-            <div class="flex h-16 items-center gap-2 border-b border-edge px-4">
-                <ApplicationLogo class="h-8 w-8 fill-current text-teal-700 dark:text-teal-300" />
-                <span class="text-sm font-semibold text-content-strong">منصة تحفيظ القرآن</span>
-            </div>
-            <nav class="flex-1 space-y-1 overflow-y-auto p-3">
-                <Link
-                    v-for="item in navItems"
-                    :key="item.routeName"
-                    :href="route(item.routeName)"
-                    class="block rounded-md px-3 py-2.5 text-sm font-medium transition"
-                    :class="isActive(item.routeName)
-                        ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300'
-                        : 'text-content-soft hover:bg-surface-sunken hover:text-content'"
-                >
-                    {{ item.label }}
-                </Link>
-            </nav>
-        </aside>
+            تخطَّ إلى المحتوى
+        </a>
 
-        <!-- Sidebar (Mobile Drawer) -->
-        <div v-if="sidebarOpen" class="fixed inset-0 z-40 lg:hidden">
-            <div class="fixed inset-0 bg-black/40" @click="sidebarOpen = false" />
-            <aside class="fixed inset-y-0 right-0 w-64 overflow-y-auto bg-surface shadow-xl">
-                <div class="flex h-16 items-center justify-between border-b border-edge px-4">
-                    <span class="text-sm font-semibold text-content-strong">القائمة</span>
-                    <button type="button" class="min-h-[44px] min-w-[44px] p-2" @click="sidebarOpen = false">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <nav class="space-y-1 p-3">
-                    <Link
-                        v-for="item in navItems"
-                        :key="item.routeName"
-                        :href="route(item.routeName)"
-                        class="block min-h-[44px] rounded-md px-3 py-2.5 text-sm font-medium"
-                        :class="isActive(item.routeName)
-                            ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300'
-                            : 'text-content-soft hover:bg-surface-sunken'"
-                        @click="sidebarOpen = false"
-                    >
-                        {{ item.label }}
-                    </Link>
-                </nav>
-            </aside>
-        </div>
+        <Toast />
+        <AppSidebar />
+        <AppMobileDrawer :open="drawerOpen" @close="drawerOpen = false" />
 
-        <div class="lg:pr-64">
-            <!-- Header -->
-            <header class="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-edge bg-surface px-4">
-                <button
-                    type="button"
-                    class="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-content-muted hover:bg-surface-sunken lg:hidden"
-                    @click="sidebarOpen = true"
-                >
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+        <div class="flex min-h-dvh flex-col lg:ps-64">
+            <AppTopBar :menu-open="drawerOpen" @open-menu="drawerOpen = true" />
 
-                <div class="flex items-center gap-3">
-                    <OfflineIndicator />
-                    <span class="text-sm font-medium text-content-body">{{ user.name }}</span>
-                    <Link
-                        :href="route('profile.edit')"
-                        class="hidden text-sm text-content-muted hover:text-content-body sm:inline"
-                    >
-                        الملف الشخصي
-                    </Link>
-                    <button
-                        type="button"
-                        class="min-h-[44px] rounded-md px-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
-                        @click="logout"
-                    >
-                        خروج
-                    </button>
-                </div>
-            </header>
-
-            <header v-if="$slots.header" class="border-b border-edge bg-surface">
-                <div class="px-4 py-6">
+            <div v-if="$slots.header" class="border-b border-edge bg-surface">
+                <div class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                     <slot name="header" />
                 </div>
-            </header>
+            </div>
 
-            <main class="p-4">
+            <main
+                id="main-content"
+                tabindex="-1"
+                class="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-4 focus:outline-none sm:px-6 sm:pt-6 md:pb-10 lg:px-8"
+            >
                 <slot />
             </main>
         </div>
+
+        <AppMobileNav @open-more="drawerOpen = true" />
     </div>
 </template>

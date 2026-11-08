@@ -29,15 +29,15 @@ function toggle(flag: FeatureFlag): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">أعلام الميزات (Feature Flags)</h2>
+            <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">أعلام الميزات (Feature Flags)</h2>
         </template>
 
         <div class="mx-auto max-w-4xl">
             <EmptyState v-if="flags.length === 0" title="لا توجد أعلام ميزات متاحة" />
 
-            <div v-else class="overflow-hidden rounded-lg bg-surface shadow-sm">
+            <div v-else class="overflow-hidden card">
                 <ul class="divide-y divide-edge-soft">
-                    <li v-for="flag in flags" :key="flag.id" class="flex items-center justify-between px-4 py-4">
+                    <li v-for="flag in flags" :key="flag.id" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-4">
                         <div>
                             <p class="font-medium text-content-strong">{{ flag.key }}</p>
                             <p v-if="flag.organization_id === null" class="text-xs text-content-muted">إعداد عالمي افتراضي</p>

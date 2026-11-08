@@ -128,11 +128,11 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-content-strong">نتائج: {{ exam.title }}</h2>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">نتائج: {{ exam.title }}</h2>
                 <button
                     type="button"
-                    class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                    class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     @click="showAddModal = true"
                 >
                     + تسجيل نتيجة
@@ -157,7 +157,7 @@ function onPageChange(page: number): void {
                     <StatusBadge :status="(row as unknown as ExamResult).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                         <button
                             v-if="(row as unknown as ExamResult).status !== 'approved'"
                             type="button"
@@ -189,10 +189,10 @@ function onPageChange(page: number): void {
                     <FormInput id="result-grade" v-model="addForm.grade" label="التقدير" :error="errors.grade" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showAddModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showAddModal = false">
                         إلغاء
                     </button>
-                    <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                    <button type="submit" :disabled="processing" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard">
                         حفظ
                     </button>
                 </div>
@@ -208,7 +208,7 @@ function onPageChange(page: number): void {
                     <FormInput id="correct-reason" v-model="correctForm.reason" label="سبب التصحيح" required :error="errors.reason" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showCorrectModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showCorrectModal = false">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

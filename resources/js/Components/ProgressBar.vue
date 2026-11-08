@@ -26,11 +26,11 @@ const percentage = computed(() => {
 });
 
 const colorClasses: Record<string, string> = {
-    teal: 'bg-teal-600',
-    blue: 'bg-blue-600',
-    green: 'bg-green-600',
-    amber: 'bg-amber-500',
-    red: 'bg-red-600',
+    teal: 'bg-teal-600 dark:bg-teal-400',
+    blue: 'bg-blue-600 dark:bg-blue-400',
+    green: 'bg-green-600 dark:bg-green-400',
+    amber: 'bg-amber-500 dark:bg-amber-400',
+    red: 'bg-red-600 dark:bg-red-400',
 };
 </script>
 

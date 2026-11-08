@@ -6,11 +6,14 @@ const props = withDefaults(
         show?: boolean;
         maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
         closeable?: boolean;
+        /** وصف النافذة لقارئ الشاشة (العنوان المرئي موجود داخل المحتوى) */
+        title?: string;
     }>(),
     {
         show: false,
         maxWidth: '2xl',
         closeable: true,
+        title: '',
     },
 );
 
@@ -74,46 +77,47 @@ const maxWidthClass = computed(() => {
 
 <template>
     <dialog
-        class="z-50 m-0 min-h-full min-w-full overflow-y-auto bg-transparent backdrop:bg-transparent"
         ref="dialog"
+        class="z-modal m-0 h-full max-h-none w-full max-w-none overflow-y-auto bg-transparent p-0 backdrop:bg-transparent"
+        aria-modal="true"
+        :aria-label="title || undefined"
     >
-        <div
-            class="fixed inset-0 z-50 overflow-y-auto px-4 py-6 sm:px-0"
-            scroll-region
-        >
+        <div class="fixed inset-0 z-modal flex min-h-full items-end justify-center sm:items-center sm:p-6">
             <Transition
-                enter-active-class="ease-out duration-200"
+                enter-active-class="transition duration-200 ease-standard"
                 enter-from-class="opacity-0"
                 enter-to-class="opacity-100"
-                leave-active-class="ease-in duration-200"
+                leave-active-class="transition duration-150 ease-standard"
                 leave-from-class="opacity-100"
                 leave-to-class="opacity-0"
             >
                 <div
                     v-show="show"
-                    class="fixed inset-0 transform transition-all"
+                    class="fixed inset-0 bg-scrim/50 dark:bg-scrim/70"
                     @click="close"
-                >
-                    <div
-                        class="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-900"
-                    />
-                </div>
+                />
             </Transition>
 
             <Transition
-                enter-active-class="ease-out duration-200"
-                enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-                leave-active-class="ease-in duration-200"
-                leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-                leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enter-active-class="transition duration-200 ease-standard"
+                enter-from-class="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95"
+                enter-to-class="translate-y-0 opacity-100 sm:scale-100"
+                leave-active-class="transition duration-150 ease-standard"
+                leave-from-class="translate-y-0 opacity-100 sm:scale-100"
+                leave-to-class="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95"
             >
+                <!--
+                 * على الجوال: ورقة سفلية (bottom sheet) بعرض كامل، فلا تُقتطع
+                 * النماذج الطويلة ولا تخرج عن الشاشة. على sm+ نافذة مركزية.
+                 -->
                 <div
                     v-show="show"
-                    class="mb-6 transform overflow-hidden rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full dark:bg-gray-800"
+                    class="relative w-full transform overflow-hidden rounded-t-2xl border border-edge bg-surface shadow-pop transition-all sm:rounded-2xl"
                     :class="maxWidthClass"
                 >
-                    <slot v-if="showSlot" />
+                    <div class="max-h-[85dvh] overflow-y-auto overscroll-contain pb-safe">
+                        <slot v-if="showSlot" />
+                    </div>
                 </div>
             </Transition>
         </div>

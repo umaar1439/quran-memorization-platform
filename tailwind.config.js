@@ -19,8 +19,36 @@ export default {
 
     theme: {
         extend: {
+            /*
+             * الخط: IBM Plex Sans Arabic يغطّي العربية واللاتينية بوزن واحد متّسق،
+             * ويأتي أولاً لأن الواجهة عربية أولاً؛ Figtree خط احتياطي.
+             * لا نضيف letter-spacing على أي نص عربي (يكسر اتصال الحروف).
+             */
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"IBM Plex Sans Arabic"', 'Figtree', ...defaultTheme.fontFamily.sans],
+            },
+
+            /*
+             * ظلال متعددة الطبقات بدل الظل الواحد الثقيل: حافة 1px + ظل ناعم
+             * بعيد يعطي عمقاً بلا ثقل. في الوضع الليلي يقوم الحدّ (edge) بالمهمة.
+             */
+            boxShadow: {
+                card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 10px 24px -18px rgb(15 23 42 / 0.20)',
+                raised: '0 1px 3px 0 rgb(15 23 42 / 0.06), 0 14px 32px -20px rgb(15 23 42 / 0.28)',
+                pop: '0 24px 60px -28px rgb(15 23 42 / 0.38)',
+            },
+
+            /* طبقات z-index مركزية حتى لا تتضارب الأشرطة والنوافذ والإشعارات */
+            zIndex: {
+                nav: '30',
+                drawer: '40',
+                modal: '50',
+                toast: '60',
+            },
+
+            /* منحنى حركة موحّد (120-250ms) لكل التفاعلات الدقيقة */
+            transitionTimingFunction: {
+                standard: 'cubic-bezier(0.2, 0, 0, 1)',
             },
 
             /*
@@ -53,6 +81,8 @@ export default {
                     strong: 'rgb(var(--color-edge-strong) / <alpha-value>)',
                     soft: 'rgb(var(--color-edge-soft) / <alpha-value>)',
                 },
+                /* طبقة التعتيم خلف النوافذ والأدراج (scrim) */
+                scrim: 'rgb(var(--color-scrim) / <alpha-value>)',
             },
         },
     },

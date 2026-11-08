@@ -1,22 +1,30 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import BrandMark from '@/Components/BrandMark.vue';
+
+/**
+ * تخطيط صفحات المصادقة: بطاقة واحدة متمركزة على خلفية هادئة،
+ * بارتفاع dvh (يعمل مع لوحة مفاتيح الجوال) وبمناطق آمنة،
+ * وبعرض أقصى مقروء بدل تمدد الحقول على الشاشات الكبيرة.
+ */
 </script>
 
 <template>
-    <div class="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-emerald-50 dark:from-emerald-500/10 via-surface to-emerald-50 dark:to-emerald-500/10 px-4 py-8">
-        <div class="mb-6">
-            <Link href="/" class="flex items-center gap-2">
-                <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-xl font-bold text-white">ت</span>
-                <span class="text-xl font-bold text-emerald-800 dark:text-emerald-200">تحفيظ</span>
-            </Link>
-        </div>
+    <div
+        class="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-teal-50 via-surface-muted to-surface-muted px-4 pb-safe pt-safe sm:px-6 dark:from-teal-500/10 dark:via-surface-muted dark:to-surface-muted"
+    >
+        <main class="w-full max-w-md py-8 sm:py-10">
+            <div class="mb-6 flex justify-center">
+                <BrandMark href="/" size="lg" label="تحفيظ" />
+            </div>
 
-        <div class="w-full max-w-md rounded-2xl border border-edge-soft bg-surface p-8 shadow-lg">
-            <slot />
-        </div>
+            <div class="card p-6 shadow-raised sm:p-8">
+                <slot />
+            </div>
 
-        <p class="mt-6 text-center text-xs text-content-faint">
-            منصة إدارة حلقات تحفيظ القرآن الكريم
-        </p>
+            <p class="mt-6 text-center text-xs text-content-muted">
+                منصة إدارة حلقات تحفيظ القرآن الكريم
+            </p>
+        </main>
     </div>
 </template>
+

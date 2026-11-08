@@ -111,7 +111,7 @@ function onAyahToChange(value: string): void {
         <p v-if="selectedSurah" class="text-xs text-content-muted">
             عدد آيات {{ selectedSurah.nameArabic }}: {{ selectedSurah.ayahCount }}
         </p>
-        <p v-else class="text-xs text-content-faint">
+        <p v-else class="text-xs text-content-muted">
             اختر السورة أولاً لعرض أرقام الآيات المتاحة.
         </p>
     </div>

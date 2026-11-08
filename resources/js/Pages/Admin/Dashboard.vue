@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import EmptyState from '@/Components/EmptyState.vue';
+import StatCard from '@/Components/StatCard.vue';
+import SectionCard from '@/Components/SectionCard.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import type { Recitation } from '@/Types';
 
 interface Stats {
@@ -32,52 +35,42 @@ const ratingLabels: Record<string, string> = {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">لوحة التحكم</h2>
+            <PageHeader
+                title="لوحة التحكم"
+                description="نظرة سريعة على المساجد والحلقات والنشاط اليومي."
+            />
         </template>
 
-        <div class="mx-auto max-w-7xl space-y-6">
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">المساجد</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.mosques_count }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">الحلقات</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.circles_count }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">الطلاب</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.students_count }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">المعلمون</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ stats.teachers_count }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">تسميعات اليوم</p>
-                    <p class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ stats.recitations_today }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-4 shadow-sm">
-                    <p class="text-sm text-content-muted">تسميعات هذا الشهر</p>
-                    <p class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ stats.recitations_this_month }}</p>
-                </div>
+        <div class="space-y-6">
+            <!--
+             * عمودان على الجوال (بطاقات مدمجة) ثم 3 ثم 6، حتى تظهر الأرقام
+             * المهمة دون تمرير طويل.
+             -->
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
+                <StatCard label="المساجد" :value="stats.mosques_count" icon="mosque" />
+                <StatCard label="الحلقات" :value="stats.circles_count" icon="circles" />
+                <StatCard label="الطلاب" :value="stats.students_count" icon="graduation-cap" />
+                <StatCard label="المعلمون" :value="stats.teachers_count" icon="user-check" />
+                <StatCard label="تسميعات اليوم" :value="stats.recitations_today" icon="book" accent="teal" />
+                <StatCard label="تسميعات هذا الشهر" :value="stats.recitations_this_month" icon="chart" accent="teal" />
             </div>
 
-            <div class="rounded-lg bg-surface shadow-sm">
-                <div class="border-b border-edge px-4 py-3">
-                    <h3 class="text-base font-semibold text-content">آخر التسميعات</h3>
-                </div>
-                <div v-if="recentRecitations.length === 0" class="p-4">
-                    <EmptyState title="لا توجد تسميعات حديثة" />
-                </div>
+            <SectionCard title="آخر التسميعات" :padded="false">
+                <EmptyState
+                    v-if="recentRecitations.length === 0"
+                    title="لا توجد تسميعات حديثة"
+                    description="ستظهر هنا آخر التسميعات المسجَّلة في حلقاتك."
+                    icon="book"
+                />
+
                 <ul v-else class="divide-y divide-edge-soft">
                     <li
                         v-for="recitation in recentRecitations"
                         :key="recitation.id"
-                        class="flex items-center justify-between px-4 py-3 text-sm"
+                        class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm sm:px-5"
                     >
-                        <div>
-                            <p class="font-medium text-content-strong">
+                        <div class="min-w-0">
+                            <p class="truncate font-medium text-content-strong">
                                 {{ recitation.student?.user?.name ?? 'طالب' }}
                             </p>
                             <p class="text-content-muted">
@@ -87,7 +80,7 @@ const ratingLabels: Record<string, string> = {
                         <StatusBadge v-if="recitation.rating" :status="recitation.rating" :labels="ratingLabels" />
                     </li>
                 </ul>
-            </div>
+            </SectionCard>
         </div>
     </AuthenticatedLayout>
 </template>

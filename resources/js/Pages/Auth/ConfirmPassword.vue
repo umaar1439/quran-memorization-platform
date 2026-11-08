@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import FormInput from '@/Components/FormInput.vue';
+import AppButton from '@/Components/AppButton.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
@@ -21,37 +19,29 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Confirm Password" />
+        <Head title="تأكيد كلمة المرور" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-content-strong">تأكيد كلمة المرور</h1>
+            <p class="mt-1 text-sm text-content-muted">
+                هذه منطقة آمنة؛ أكّد كلمة المرور قبل المتابعة.
+            </p>
         </div>
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="password" value="Password" />
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                    autofocus
-                />
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+        <form class="space-y-4" @submit.prevent="submit">
+            <FormInput
+                id="password"
+                v-model="form.password"
+                type="password"
+                label="كلمة المرور"
+                autocomplete="current-password"
+                required
+                :error="form.errors.password"
+            />
 
-            <div class="mt-4 flex justify-end">
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Confirm
-                </PrimaryButton>
-            </div>
+            <AppButton type="submit" size="lg" block :loading="form.processing">
+                تأكيد
+            </AppButton>
         </form>
     </GuestLayout>
 </template>

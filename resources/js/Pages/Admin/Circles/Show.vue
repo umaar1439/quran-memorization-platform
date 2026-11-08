@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import EmptyState from '@/Components/EmptyState.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import ProgressBar from '@/Components/ProgressBar.vue';
+import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
+import StatCard from '@/Components/StatCard.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import AppIcon from '@/Components/AppIcon.vue';
 import type { Circle, StudentProfile } from '@/Types';
 
 interface StudentStat {
@@ -22,7 +27,7 @@ interface Summary {
     overall_progress: number;
 }
 
-defineProps<{
+const props = defineProps<{
     circle: Circle;
     summary: Summary;
     students: StudentStat[];
@@ -38,6 +43,39 @@ function formatDate(value: string | null): string {
         day: 'numeric',
     });
 }
+
+const studentColumns: DataTableColumn[] = [
+    { key: 'name', label: 'الطالب' },
+    { key: 'status', label: 'الحالة' },
+    { key: 'last_activity_at', label: 'آخر نشاط' },
+    { key: 'recitation_count', label: 'تسميعات' },
+    { key: 'memorized_ayahs', label: 'آيات محفوظة' },
+    { key: 'accuracy', label: 'الدقة' },
+    { key: 'actions', label: 'إجراءات' },
+];
+
+interface StudentRow {
+    id: number;
+    name: string;
+    status: string;
+    last_activity_at: string;
+    recitation_count: number;
+    memorized_ayahs: number;
+    accuracy: string;
+}
+
+/* تحويل السجلات إلى صفوف مسطّحة ليعرضها DataTable (جدول على الحاسب، بطاقات على الجوال) */
+const studentRows = computed<StudentRow[]>(() =>
+    props.students.map((item) => ({
+        id: item.student.id,
+        name: item.student.user?.name ?? 'طالب',
+        status: item.student.status,
+        last_activity_at: formatDate(item.last_activity_at),
+        recitation_count: item.recitation_count,
+        memorized_ayahs: item.memorized_ayahs,
+        accuracy: `${item.accuracy}%`,
+    })),
+);
 </script>
 
 <template>
@@ -45,113 +83,86 @@ function formatDate(value: string | null): string {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-start justify-between">
-                <div>
-                    <Link :href="route('admin.circles.index')" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300">
-                        → رجوع إلى الحلقات
-                    </Link>
-                    <h2 class="mt-1 text-xl font-semibold leading-tight text-content-strong">{{ circle.name }}</h2>
-                    <p class="mt-1 text-sm text-content-muted">
-                        {{ circle.mosque?.name ?? '—' }} · {{ circle.level ?? 'بدون مستوى' }}
-                    </p>
-                </div>
-                <StatusBadge :status="circle.status" />
-            </div>
+            <PageHeader
+                :title="circle.name"
+                :description="`${circle.mosque?.name ?? '—'} · ${circle.level ?? 'بدون مستوى'}`"
+                :back-href="route('admin.circles.index')"
+                back-label="رجوع إلى الحلقات"
+            >
+                <template #meta>
+                    <StatusBadge :status="circle.status" />
+                </template>
+            </PageHeader>
         </template>
 
-        <div class="mx-auto max-w-7xl space-y-6">
-            <!-- ملخص عام -->
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="rounded-lg bg-surface p-5 shadow-sm">
-                    <p class="text-sm text-content-muted">إجمالي الطلاب</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ summary.total_students }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-5 shadow-sm">
-                    <p class="text-sm text-content-muted">تسميعات هذا الشهر</p>
-                    <p class="mt-1 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ summary.recitations_this_month }}</p>
-                </div>
-                <div class="rounded-lg bg-surface p-5 shadow-sm">
-                    <p class="text-sm text-content-muted">نسبة الحضور</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ summary.attendance_rate }}%</p>
-                </div>
-                <div class="rounded-lg bg-surface p-5 shadow-sm">
-                    <p class="text-sm text-content-muted">التقدم الإجمالي</p>
-                    <p class="mt-1 text-2xl font-bold text-content">{{ summary.overall_progress }}%</p>
-                    <ProgressBar class="mt-2" :value="summary.overall_progress" :show-percentage="false" color="teal" />
-                </div>
+        <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+                <StatCard label="إجمالي الطلاب" :value="summary.total_students" icon="graduation-cap" />
+                <StatCard label="تسميعات هذا الشهر" :value="summary.recitations_this_month" icon="book" accent="teal" />
+                <StatCard label="نسبة الحضور" :value="`${summary.attendance_rate}%`" icon="check-circle" />
+                <StatCard label="التقدم الإجمالي" :value="`${summary.overall_progress}%`" icon="chart" accent="teal" />
             </div>
 
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <!-- بيانات المعلم -->
-                <div class="rounded-lg bg-surface p-5 shadow-sm">
+                <div class="card p-5">
                     <h3 class="mb-3 text-base font-semibold text-content">المعلم المشرف</h3>
                     <div v-if="circle.teacher" class="space-y-2 text-sm">
                         <p class="font-medium text-content-strong">{{ circle.teacher.name }}</p>
-                        <p class="text-content-muted">{{ circle.teacher.email ?? '—' }}</p>
+                        <p class="break-words text-content-muted">{{ circle.teacher.email ?? '—' }}</p>
                         <p class="text-content-muted">{{ circle.teacher.phone ?? '—' }}</p>
                         <StatusBadge v-if="circle.teacher.status" :status="circle.teacher.status" />
                     </div>
-                    <EmptyState v-else title="لا يوجد معلم معيّن" />
+                    <EmptyState v-else title="لا يوجد معلم معيّن" icon="user-check" />
                 </div>
 
                 <!-- الطالب المتميز -->
-                <div class="rounded-lg bg-surface p-5 shadow-sm lg:col-span-2">
+                <div class="card p-5 lg:col-span-2">
                     <h3 class="mb-3 text-base font-semibold text-content">الطالب المتميز</h3>
                     <div v-if="topStudent" class="flex flex-wrap items-center gap-4">
-                        <span class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/15 text-2xl">🏆</span>
-                        <div>
-                            <p class="text-lg font-semibold text-content">{{ topStudent.student.user?.name ?? 'طالب' }}</p>
+                        <span
+                            class="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300"
+                        >
+                            <AppIcon name="award" size="lg" />
+                        </span>
+                        <div class="min-w-0">
+                            <p class="truncate text-lg font-semibold text-content-strong">
+                                {{ topStudent.student.user?.name ?? 'طالب' }}
+                            </p>
                             <p class="text-sm text-content-muted">
                                 {{ topStudent.memorized_ayahs }} آية محفوظة · {{ topStudent.recitation_count }} تسميع · دقة {{ topStudent.accuracy }}%
                             </p>
                         </div>
-                        <div class="ms-auto w-full sm:w-64">
+                        <div class="w-full sm:ms-auto sm:w-64">
                             <ProgressBar :value="topStudent.progress_percentage" label="تقدم الحفظ" color="teal" />
                         </div>
                     </div>
-                    <EmptyState v-else title="لا يوجد طلاب بعد" />
+                    <EmptyState v-else title="لا يوجد طلاب بعد" icon="users" />
                 </div>
             </div>
 
-            <!-- قائمة الطلاب -->
-            <div class="overflow-hidden rounded-lg border border-edge bg-surface shadow-sm">
-                <div class="border-b border-edge px-4 py-3">
-                    <h3 class="text-base font-semibold text-content">الطلاب المسجلون</h3>
-                </div>
-                <div v-if="students.length === 0" class="p-4">
-                    <EmptyState title="لا يوجد طلاب في هذه الحلقة" />
-                </div>
-                <div v-else class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-edge text-right">
-                        <thead class="bg-surface-muted">
-                            <tr>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">الطالب</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">الحالة</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">آخر نشاط</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">تسميعات</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">آيات محفوظة</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">الدقة</th>
-                                <th class="px-4 py-3 text-xs font-semibold uppercase text-content-muted">إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-edge-soft">
-                            <tr v-for="item in students" :key="item.student.id" class="hover:bg-surface-muted">
-                                <td class="px-4 py-3 text-sm font-medium text-content-strong">{{ item.student.user?.name ?? 'طالب' }}</td>
-                                <td class="px-4 py-3 text-sm"><StatusBadge :status="item.student.status" /></td>
-                                <td class="px-4 py-3 text-sm text-content-soft">{{ formatDate(item.last_activity_at) }}</td>
-                                <td class="px-4 py-3 text-sm text-content-soft">{{ item.recitation_count }}</td>
-                                <td class="px-4 py-3 text-sm text-content-soft">{{ item.memorized_ayahs }}</td>
-                                <td class="px-4 py-3 text-sm text-content-soft">{{ item.accuracy }}%</td>
-                                <td class="px-4 py-3 text-sm">
-                                    <Link :href="route('students.show', item.student.id)" class="font-medium text-teal-600 dark:text-teal-400 hover:underline">
-                                        عرض ملف الطالب
-                                    </Link>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <!-- قائمة الطلاب: جدول على الحاسب وبطاقات على الجوال -->
+            <section class="space-y-3">
+                <h3 class="text-base font-semibold text-content">الطلاب المسجلون</h3>
+                <DataTable
+                    :columns="studentColumns"
+                    :rows="studentRows"
+                    :searchable="false"
+                    label="قائمة الطلاب المسجلين في الحلقة"
+                >
+                    <template #cell-status="{ row }">
+                        <StatusBadge :status="(row as StudentRow).status" />
+                    </template>
+                    <template #cell-actions="{ row }">
+                        <Link
+                            :href="route('students.show', (row as StudentRow).id)"
+                            class="link"
+                        >
+                            عرض ملف الطالب
+                        </Link>
+                    </template>
+                </DataTable>
+            </section>
         </div>
     </AuthenticatedLayout>
 </template>

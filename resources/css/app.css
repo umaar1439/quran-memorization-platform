@@ -29,6 +29,8 @@
     --color-edge: 229 231 235; /* gray-200 */
     --color-edge-strong: 209 213 219; /* gray-300 */
     --color-edge-soft: 243 244 246; /* gray-100 */
+
+    --color-scrim: 15 23 42; /* slate-900 */
 }
 
 /* الوضع الليلي: يتبع إعداد النظام، ونفس أسماء المتغيّرات بقيم معكوسة */
@@ -50,16 +52,126 @@
         --color-edge: 55 65 81; /* gray-700 */
         --color-edge-strong: 75 85 99; /* gray-600 */
         --color-edge-soft: 31 41 55; /* gray-800 */
+
+        --color-scrim: 2 6 23; /* slate-950 */
     }
 }
 
 @layer base {
+    html {
+        /* منع تكبير iOS التلقائي عند تدوير الشاشة */
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: transparent;
+    }
+
     /*
      * خلفية/لون نص الصفحة من نفس المتغيّرات، حتى تغطي الوضع الليلي الصفحات
      * التي لا تحدّد خلفيتها بنفسها.
      */
     body {
-        @apply bg-surface text-content;
+        @apply bg-surface-muted text-content;
+    }
+
+    /*
+     * العربية تحتاج تباعد أسطر أوسع من اللاتينية (التشكيل والحروف الصاعدة/الهابطة)
+     * وإلا تلتصق الأسطر. لا نضيف letter-spacing إطلاقاً (يكسر اتصال الحروف).
+     */
+    html[lang='ar'] body {
+        line-height: 1.75;
+    }
+
+    /* عناوين متوازنة الأسطر (text-wrap مدعوم تدريجياً؛ يُتجاهل في المتصفحات القديمة) */
+    h1,
+    h2,
+    h3 {
+        text-wrap: balance;
+    }
+}
+
+@layer components {
+    /* الحاوية الأساسية للبطاقات: حافة 1px + ظل ناعم */
+    .card {
+        @apply rounded-xl border border-edge bg-surface shadow-card;
+    }
+
+    .card-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-edge px-4 py-3 sm:px-5;
+    }
+
+    .card-body {
+        @apply p-4 sm:p-5;
+    }
+
+    /*
+     * حقل إدخال موحّد (input/select/textarea).
+     * text-base على الجوال يمنع تكبير iOS التلقائي عند التركيز، ثم text-sm على
+     * الشاشات الأكبر لكثافة أعلى.
+     */
+    .field {
+        @apply block w-full rounded-lg border-edge-strong bg-surface text-base text-content shadow-sm placeholder:text-content-muted focus:border-teal-600 focus:ring-2 focus:ring-teal-600/30 disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-content-muted sm:text-sm;
+    }
+
+    .field-error {
+        @apply border-red-500 focus:border-red-500 focus:ring-red-500/30;
+    }
+
+    /*
+     * أزرار: تُعرَّف أنماطها مرة واحدة هنا، ويستهلكها AppButton وبقية الصفحات
+     * (بدل تكرار سلسلة أصناف طويلة في كل نموذج/تذييل نافذة).
+     */
+    .btn-primary {
+        @apply bg-teal-700 text-white shadow-sm hover:bg-teal-800 active:bg-teal-900 disabled:pointer-events-none disabled:opacity-50 dark:bg-teal-400 dark:text-teal-950 dark:hover:bg-teal-300;
+    }
+
+    .btn-secondary {
+        @apply border border-edge-strong bg-surface text-content-body hover:bg-surface-muted active:bg-surface-sunken;
+    }
+
+    .btn-ghost {
+        @apply text-content-body hover:bg-surface-sunken active:bg-surface-sunken;
+    }
+
+    .btn-danger {
+        @apply bg-red-600 text-white shadow-sm hover:bg-red-700 active:bg-red-800;
+    }
+
+    .btn-danger-ghost {
+        @apply text-red-700 hover:bg-red-50 active:bg-red-100 dark:text-red-300 dark:hover:bg-red-500/10;
+    }
+
+    /*
+     * حلقة تركيز واحدة لكل العناصر التفاعلية (لوحة المفاتيح فقط)
+     */
+    .focus-ring {
+        @apply outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface dark:focus-visible:ring-teal-300;
+    }
+
+    /*
+     * رابط إجراء نصّي (داخل الجداول/البطاقات). ارتفاع 40px يقرّب هدف اللمس من
+     * الحد الموصى به على الجوال، مع حلقة تركيز واضحة للوحة المفاتيح.
+     */
+    .link {
+        @apply inline-flex min-h-10 items-center rounded-sm font-medium text-teal-700 underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface dark:text-teal-300 dark:focus-visible:ring-teal-300;
+    }
+
+    .link-danger {
+        @apply inline-flex min-h-10 items-center rounded-sm font-medium text-red-700 underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2 focus-visible:ring-offset-surface dark:text-red-300 dark:focus-visible:ring-red-300;
+    }
+}
+
+@layer utilities {
+    /* هوامش المناطق الآمنة (النوتش وشريط الإيماءات) */
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* إزاحة العناصر العائمة فوق شريط التنقل السفلي على الجوال */
+    .above-tabbar {
+        bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
     }
 }
 

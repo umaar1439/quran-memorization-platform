@@ -1,35 +1,42 @@
 <script setup lang="ts">
+import AppIcon, { type IconName } from '@/Components/AppIcon.vue';
+
+/**
+ * EmptyState — الحالة الفارغة الموحّدة لكل القوائم والجداول.
+ * الأيقونة اختيارية وتُعرض داخل دائرة هادئة بدل رمادي مسطّح، والنص يبقى
+ * هو ما يوصّل الرسالة (لا نعتمد على اللون).
+ */
 withDefaults(
     defineProps<{
         title: string;
         description?: string;
+        icon?: IconName;
     }>(),
     {
         description: '',
+        icon: 'file-text',
     },
 );
 </script>
 
 <template>
-    <div class="flex flex-col items-center justify-center px-4 py-12 text-center">
-        <div class="mb-4 text-content-faint">
+    <div class="flex flex-col items-center justify-center px-4 py-10 text-center sm:py-12">
+        <span
+            class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-sunken text-content-faint"
+        >
             <slot name="icon">
-                <svg class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M9 13h6m-6 4h6m2 5H7a2 2 0 01-2-2V4a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V20a2 2 0 01-2 2z"
-                    />
-                </svg>
+                <AppIcon :name="icon" size="lg" />
             </slot>
-        </div>
-        <h3 class="text-base font-semibold text-content">{{ title }}</h3>
-        <p v-if="description" class="mt-1 text-sm text-content-muted">
+        </span>
+
+        <h3 class="text-base font-semibold text-content-strong">{{ title }}</h3>
+        <p v-if="description" class="mt-1 max-w-sm text-sm text-content-muted">
             {{ description }}
         </p>
+
         <div v-if="$slots.action" class="mt-4">
             <slot name="action" />
         </div>
     </div>
 </template>
+

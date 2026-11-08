@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+import AppButton from '@/Components/AppButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps<{
@@ -21,39 +21,36 @@ const verificationLinkSent = computed(
 
 <template>
     <GuestLayout>
-        <Head title="Email Verification" />
+        <Head title="تأكيد البريد الإلكتروني" />
 
-        <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-            Thanks for signing up! Before getting started, could you verify your
-            email address by clicking on the link we just emailed to you? If you
-            didn't receive the email, we will gladly send you another.
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-bold text-content-strong">تأكيد البريد الإلكتروني</h1>
+            <p class="mt-1 text-sm text-content-muted">
+                أرسلنا رابط تحقق إلى بريدك. اضغط عليه لتفعيل حسابك، أو اطلب رابطاً جديداً.
+            </p>
         </div>
 
         <div
-            class="mb-4 text-sm font-medium text-green-600 dark:text-green-400"
             v-if="verificationLinkSent"
+            role="status"
+            class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-medium text-green-800 dark:bg-green-500/10 dark:text-green-200"
         >
-            A new verification link has been sent to the email address you
-            provided during registration.
+            تم إرسال رابط تحقق جديد إلى بريدك الإلكتروني.
         </div>
 
-        <form @submit.prevent="submit">
-            <div class="mt-4 flex items-center justify-between">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Resend Verification Email
-                </PrimaryButton>
+        <form class="space-y-3" @submit.prevent="submit">
+            <AppButton type="submit" size="lg" block :loading="form.processing">
+                إعادة إرسال رابط التحقق
+            </AppButton>
 
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                    >Log Out</Link
-                >
-            </div>
+            <Link
+                :href="route('logout')"
+                method="post"
+                as="button"
+                class="focus-ring block w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium text-content-muted hover:text-content-body"
+            >
+                تسجيل الخروج
+            </Link>
         </form>
     </GuestLayout>
 </template>

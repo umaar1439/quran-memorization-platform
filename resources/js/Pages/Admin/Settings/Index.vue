@@ -44,25 +44,25 @@ function submit(): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">إعدادات المنظمة</h2>
+            <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">إعدادات المنظمة</h2>
         </template>
 
         <div class="mx-auto max-w-4xl">
             <EmptyState v-if="settings.length === 0" title="لا توجد إعدادات مُعرَّفة حالياً" />
 
             <form v-else class="space-y-6" @submit.prevent="submit">
-                <div v-for="(items, group) in groups" :key="group" class="rounded-lg bg-surface p-6 shadow-sm">
+                <div v-for="(items, group) in groups" :key="group" class="card p-6">
                     <h3 class="mb-4 text-base font-semibold text-content">{{ group }}</h3>
                     <div class="space-y-4">
                         <div v-for="setting in items" :key="setting.key">
-                            <label :for="`setting-${setting.key}`" class="mb-1 block text-sm font-medium text-content-body">
+                            <label :for="`setting-${setting.key}`" class="mb-1.5 block text-sm font-medium text-content-body">
                                 {{ setting.key }}
                             </label>
                             <input
                                 :id="`setting-${setting.key}`"
                                 type="text"
                                 :value="setting.value"
-                                class="block min-h-[44px] w-full rounded-md border-edge-strong bg-surface text-content shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
+                                class="field min-h-11"
                                 @input="updateValue(setting.key, ($event.target as HTMLInputElement).value)"
                             />
                         </div>
@@ -73,7 +73,7 @@ function submit(): void {
                     <button
                         type="submit"
                         :disabled="form.processing"
-                        class="min-h-[44px] rounded-md bg-teal-600 px-6 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     >
                         حفظ الإعدادات
                     </button>

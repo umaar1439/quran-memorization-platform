@@ -5,6 +5,7 @@ import { Head } from '@inertiajs/vue3';
 import EmptyState from '@/Components/EmptyState.vue';
 import ProgressBar from '@/Components/ProgressBar.vue';
 import ProgressRing from '@/Components/ProgressRing.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import type { StudentAnalytics, StudentProfile } from '@/Types';
 
 const props = defineProps<{
@@ -33,13 +34,13 @@ const coveredJuz = computed(() =>
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">لوحة الطالب</h2>
+            <PageHeader title="لوحة الطالب" description="ملخص تقدمك في الحفظ والحضور والملاحظات." />
         </template>
 
-        <div class="mx-auto max-w-7xl space-y-6">
+        <div class="space-y-6">
             <!-- نظرة عامة -->
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div class="flex flex-col items-center justify-center rounded-lg bg-surface p-6 shadow-sm">
+                <div class="flex flex-col items-center justify-center card p-6">
                     <ProgressRing :percentage="analytics.overall_progress.percentage" label="التقدم الكلي في الحفظ" />
                     <p class="mt-3 text-sm text-content-muted">
                         {{ analytics.overall_progress.memorized_ayahs }} من
@@ -47,9 +48,9 @@ const coveredJuz = computed(() =>
                     </p>
                 </div>
 
-                <div class="rounded-lg bg-surface p-6 shadow-sm">
+                <div class="card p-6">
                     <p class="text-sm text-content-muted">نسبة الحضور</p>
-                    <p class="mt-2 text-2xl font-bold text-teal-700 dark:text-teal-300">{{ analytics.attendance_rate.percentage }}%</p>
+                    <p class="mt-2 text-2xl font-bold tabular-nums text-teal-700 dark:text-teal-300">{{ analytics.attendance_rate.percentage }}%</p>
                     <ProgressBar class="mt-3" :value="analytics.attendance_rate.percentage" :show-percentage="false" color="teal" />
                     <p class="mt-2 text-xs text-content-muted">
                         {{ analytics.attendance_rate.attendance_days }} يوم حضور من
@@ -57,13 +58,13 @@ const coveredJuz = computed(() =>
                     </p>
                 </div>
 
-                <div class="rounded-lg bg-surface p-6 shadow-sm">
+                <div class="card p-6">
                     <p class="text-sm text-content-muted">سلسلة الأيام المتتالية</p>
-                    <p class="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">{{ analytics.streak }}</p>
+                    <p class="mt-2 text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">{{ analytics.streak }}</p>
                     <p class="mt-2 text-xs text-content-muted">يوم متتالٍ من النشاط</p>
                 </div>
 
-                <div class="rounded-lg bg-surface p-6 shadow-sm">
+                <div class="card p-6">
                     <p class="text-sm text-content-muted">التسجيل</p>
                     <dl class="mt-2 space-y-1 text-sm">
                         <div class="flex justify-between gap-2">
@@ -83,14 +84,14 @@ const coveredJuz = computed(() =>
             </div>
 
             <!-- التقدم بالسور -->
-            <div class="rounded-lg bg-surface shadow-sm">
+            <div class="card">
                 <div class="border-b border-edge px-4 py-3">
                     <h3 class="text-base font-semibold text-content">التقدم بالسور</h3>
                 </div>
                 <EmptyState v-if="coveredSurahs.length === 0" title="لا يوجد تقدّم محفوظ بعد" />
                 <ul v-else class="divide-y divide-edge-soft">
                     <li v-for="surah in coveredSurahs" :key="surah.surah_number" class="px-4 py-3">
-                        <div class="flex items-center justify-between text-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                             <span class="font-medium text-content-strong">
                                 {{ surah.surah_name ?? `سورة ${surah.surah_number}` }}
                             </span>
@@ -103,7 +104,7 @@ const coveredJuz = computed(() =>
                 </ul>
             </div>
             <!-- الأجزاء المغطاة -->
-            <div v-if="coveredJuz.length > 0" class="rounded-lg bg-surface shadow-sm">
+            <div v-if="coveredJuz.length > 0" class="card">
                 <div class="border-b border-edge px-4 py-3">
                     <h3 class="text-base font-semibold text-content">الأجزاء</h3>
                 </div>
@@ -116,26 +117,26 @@ const coveredJuz = computed(() =>
 
             <!-- نقاط القوة والضعف -->
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div class="rounded-lg bg-surface shadow-sm">
+                <div class="card">
                     <div class="border-b border-edge px-4 py-3">
                         <h3 class="text-base font-semibold text-content">نقاط القوة</h3>
                     </div>
                     <EmptyState v-if="analytics.strengths.length === 0" title="لا توجد بيانات كافية بعد" />
                     <ul v-else class="divide-y divide-edge-soft">
-                        <li v-for="strength in analytics.strengths" :key="strength.surah_number" class="flex items-center justify-between px-4 py-3 text-sm">
+                        <li v-for="strength in analytics.strengths" :key="strength.surah_number" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm">
                             <span class="font-medium text-content-strong">سورة {{ strength.surah_number }}</span>
                             <span class="text-green-700 dark:text-green-300">{{ strength.excellent_ratio }}% ممتاز</span>
                         </li>
                     </ul>
                 </div>
 
-                <div class="rounded-lg bg-surface shadow-sm">
+                <div class="card">
                     <div class="border-b border-edge px-4 py-3">
                         <h3 class="text-base font-semibold text-content">نقاط تحتاج تحسيناً</h3>
                     </div>
                     <EmptyState v-if="analytics.weaknesses.length === 0" title="لا توجد بيانات كافية بعد" />
                     <ul v-else class="divide-y divide-edge-soft">
-                        <li v-for="weakness in analytics.weaknesses" :key="weakness.surah_number" class="flex items-center justify-between px-4 py-3 text-sm">
+                        <li v-for="weakness in analytics.weaknesses" :key="weakness.surah_number" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm">
                             <span class="font-medium text-content-strong">سورة {{ weakness.surah_number }}</span>
                             <span class="text-red-600 dark:text-red-400">{{ weakness.needs_work_ratio }}% يحتاج عمل</span>
                         </li>
@@ -144,13 +145,13 @@ const coveredJuz = computed(() =>
             </div>
 
             <!-- توزيع الأخطاء -->
-            <div class="rounded-lg bg-surface shadow-sm">
+            <div class="card">
                 <div class="border-b border-edge px-4 py-3">
                     <h3 class="text-base font-semibold text-content">توزيع الأخطاء</h3>
                 </div>
                 <div class="space-y-4 p-4">
                     <div v-for="(value, type) in analytics.error_distribution" :key="type">
-                        <div class="flex items-center justify-between text-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
                             <span class="text-content-soft">{{ errorTypeLabels[type] ?? type }}</span>
                             <span class="font-medium text-content-strong">{{ value.count }} ({{ value.percentage }}%)</span>
                         </div>

@@ -32,7 +32,7 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">شهاداتي</h2>
+            <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">شهاداتي</h2>
         </template>
 
         <div class="mx-auto max-w-4xl space-y-4">
@@ -45,9 +45,9 @@ function onPageChange(page: number): void {
             <div
                 v-for="certificate in certificates.data"
                 :key="certificate.id"
-                class="rounded-lg bg-surface shadow-sm"
+                class="card"
             >
-                <div class="flex items-center justify-between border-b border-edge px-4 py-3">
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-edge px-4 py-3">
                     <div>
                         <h3 class="text-base font-semibold text-content">
                             {{ certificate.certificate_type }}
@@ -69,12 +69,12 @@ function onPageChange(page: number): void {
             <!-- ترقيم صفحات -->
             <div
                 v-if="certificates.last_page > 1"
-                class="flex items-center justify-between rounded-lg bg-surface px-4 py-3 shadow-sm"
+                class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 card px-4 py-3"
             >
                 <span class="text-sm text-content-muted">
                     صفحة {{ certificates.current_page }} من {{ certificates.last_page }}
                 </span>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                     <button
                         type="button"
                         :disabled="certificates.current_page <= 1"

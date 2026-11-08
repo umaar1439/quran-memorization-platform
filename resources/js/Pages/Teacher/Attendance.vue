@@ -25,7 +25,7 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">سجل الحضور</h2>
+            <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">سجل الحضور</h2>
         </template>
 
         <div class="mx-auto max-w-4xl">

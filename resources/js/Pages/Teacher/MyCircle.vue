@@ -15,14 +15,14 @@ defineProps<{
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-content-strong">حلقتي</h2>
+            <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">حلقتي</h2>
         </template>
 
         <div class="mx-auto max-w-5xl space-y-6">
             <EmptyState v-if="circles.length === 0" title="لا توجد حلقة مرتبطة بك حالياً" />
 
-            <div v-for="circle in circles" :key="circle.id" class="rounded-lg bg-surface shadow-sm">
-                <div class="flex items-center justify-between border-b border-edge px-4 py-3">
+            <div v-for="circle in circles" :key="circle.id" class="card">
+                <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-edge px-4 py-3">
                     <div>
                         <h3 class="text-base font-semibold text-content">{{ circle.name }}</h3>
                         <p class="text-sm text-content-muted">{{ circle.mosque?.name }}</p>
@@ -39,12 +39,12 @@ defineProps<{
                     <li
                         v-for="student in circle.studentProfiles"
                         :key="student.id"
-                        class="flex items-center justify-between px-4 py-3 text-sm"
+                        class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm"
                     >
                         <span class="font-medium text-content-strong">{{ student.user?.name }}</span>
                         <div class="flex items-center gap-3">
                             <StatusBadge :status="student.status" />
-                            <Link :href="route('students.show', student.id)" class="font-medium text-teal-600 dark:text-teal-400 hover:underline">
+                            <Link :href="route('students.show', student.id)" class="link">
                                 عرض ملف الطالب
                             </Link>
                         </div>

@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import FormInput from '@/Components/FormInput.vue';
+import AppButton from '@/Components/AppButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const form = useForm({
@@ -24,92 +22,66 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Register" />
+        <Head title="إنشاء حساب" />
 
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="name" value="Name" />
+        <div class="mb-6 text-center">
+            <h1 class="text-2xl font-bold tabular-nums text-content-strong">إنشاء حساب</h1>
+            <p class="mt-1 text-sm text-content-muted">سجّل بياناتك للانضمام إلى المنصة</p>
+        </div>
 
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 block w-full"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
+        <form class="space-y-4" @submit.prevent="submit">
+            <FormInput
+                id="name"
+                v-model="form.name"
+                label="الاسم"
+                autocomplete="name"
+                required
+                :error="form.errors.name"
+            />
 
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
+            <FormInput
+                id="email"
+                v-model="form.email"
+                type="email"
+                label="البريد الإلكتروني"
+                autocomplete="username"
+                required
+                :error="form.errors.email"
+            />
 
-            <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+            <FormInput
+                id="password"
+                v-model="form.password"
+                type="password"
+                label="كلمة المرور"
+                autocomplete="new-password"
+                required
+                :error="form.errors.password"
+            />
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
+            <FormInput
+                id="password_confirmation"
+                v-model="form.password_confirmation"
+                type="password"
+                label="تأكيد كلمة المرور"
+                autocomplete="new-password"
+                required
+                :error="form.errors.password_confirmation"
+            />
 
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
+            <AppButton type="submit" size="lg" block :loading="form.processing">
+                إنشاء الحساب
+            </AppButton>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
+            <p class="text-center text-sm text-content-muted">
+                لديك حساب بالفعل؟
                 <Link
                     :href="route('login')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
+                    class="link"
                 >
-                    Already registered?
+                    تسجيل الدخول
                 </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Register
-                </PrimaryButton>
-            </div>
+            </p>
         </form>
     </GuestLayout>
 </template>

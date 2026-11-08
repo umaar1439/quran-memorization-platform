@@ -4,6 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import FormSelect from '@/Components/FormSelect.vue';
 import FormInput from '@/Components/FormInput.vue';
+import AppButton from '@/Components/AppButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 import QuranRangeSelector, { type QuranRange } from '@/Components/QuranRangeSelector.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import EmptyState from '@/Components/EmptyState.vue';
@@ -195,19 +197,21 @@ onMounted(async () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-content-strong">تسميع سريع</h2>
-                <div class="flex items-center gap-2">
-                    <span v-if="pendingCount > 0" class="text-xs text-amber-700 dark:text-amber-300">
-                        {{ pendingCount }} تسميع(ات) معلّقة محلياً
+            <PageHeader title="تسميع سريع" description="سجّل تسميع الطالب خلال ثوانٍ، ويعمل دون اتصال.">
+                <template #actions>
+                    <span
+                        v-if="pendingCount > 0"
+                        class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-200"
+                    >
+                        {{ pendingCount }} تسميع معلّق محلياً
                     </span>
                     <OfflineIndicator />
-                </div>
-            </div>
+                </template>
+            </PageHeader>
         </template>
 
         <div class="mx-auto grid max-w-5xl grid-cols-1 gap-6 lg:grid-cols-2">
-            <div class="rounded-lg bg-surface p-6 shadow-sm">
+            <div class="card p-6">
                 <h3 class="mb-4 text-base font-semibold text-content">تسجيل تسميع جديد</h3>
                 <form class="space-y-4" @submit.prevent="submit">
                     <FormSelect id="recitation-student" v-model="form.student_id" label="الطالب" :options="studentOptions" required :error="errors.student_id" />
@@ -225,17 +229,13 @@ onMounted(async () => {
                         placeholder="اكتب الملاحظة المخصصة..."
                     />
 
-                    <button
-                        type="submit"
-                        :disabled="processing"
-                        class="min-h-[44px] w-full rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
-                    >
+                    <AppButton type="submit" size="lg" block :loading="processing">
                         {{ isOnline ? 'تسجيل التسميع' : 'حفظ محلياً (بدون اتصال)' }}
-                    </button>
+                    </AppButton>
                 </form>
             </div>
 
-            <div class="rounded-lg bg-surface shadow-sm">
+            <div class="card">
                 <div class="border-b border-edge px-4 py-3">
                     <h3 class="text-base font-semibold text-content">آخر التسميعات</h3>
                 </div>
@@ -243,7 +243,7 @@ onMounted(async () => {
                     <EmptyState title="لا توجد تسميعات مسجَّلة بعد" />
                 </div>
                 <ul v-else class="max-h-[520px] divide-y divide-edge-soft overflow-y-auto">
-                    <li v-for="recitation in localRecitations" :key="recitation.id" class="flex items-center justify-between px-4 py-3 text-sm">
+                    <li v-for="recitation in localRecitations" :key="recitation.id" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-sm">
                         <div>
                             <p class="font-medium text-content-strong">{{ recitation.student?.user?.name ?? 'طالب' }}</p>
                             <p class="text-content-muted">

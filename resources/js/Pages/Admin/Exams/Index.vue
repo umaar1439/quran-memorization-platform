@@ -95,11 +95,11 @@ function onPageChange(page: number): void {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold leading-tight text-content-strong">الامتحانات</h2>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">الامتحانات</h2>
                 <button
                     type="button"
-                    class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                    class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     @click="showModal = true"
                 >
                     + امتحان جديد
@@ -127,7 +127,7 @@ function onPageChange(page: number): void {
                     <StatusBadge :status="(row as unknown as Exam).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
-                    <Link :href="route('admin.exams.results', (row as unknown as Exam).id)" class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:underline">
+                    <Link :href="route('admin.exams.results', (row as unknown as Exam).id)" class="link">
                         عرض النتائج
                     </Link>
                 </template>
@@ -145,13 +145,13 @@ function onPageChange(page: number): void {
                     <FormInput id="exam-scheduled" v-model="form.scheduled_at" type="datetime-local" label="تاريخ الجدولة" :error="errors.scheduled_at" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="min-h-[44px] rounded-md border border-edge-strong px-4 py-2 text-sm" @click="showModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
                         إلغاء
                     </button>
                     <button
                         type="submit"
                         :disabled="processing"
-                        class="min-h-[44px] rounded-md bg-teal-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                        class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     >
                         حفظ
                     </button>

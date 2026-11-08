@@ -1,81 +1,76 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import BrandMark from '@/Components/BrandMark.vue';
+import AppButton from '@/Components/AppButton.vue';
+import AppIcon, { type IconName } from '@/Components/AppIcon.vue';
 
 defineProps<{
     canLogin?: boolean;
 }>();
+
+interface Feature {
+    icon: IconName;
+    title: string;
+    description: string;
+}
+
+const features: Feature[] = [
+    { icon: 'book', title: 'تتبّع التسميع', description: 'تسجيل الحفظ والمراجعة لكل طالب بدقة وسهولة.' },
+    { icon: 'circles', title: 'إدارة الحلقات', description: 'تنظيم المساجد والحلقات والمعلمين في مكان واحد.' },
+    { icon: 'award', title: 'شهادات وتقارير', description: 'إصدار الشهادات وتقارير الأداء بشكل آلي وموثّق.' },
+];
 </script>
 
 <template>
     <Head title="تحفيظ" />
 
-    <div class="min-h-screen bg-gradient-to-b from-emerald-50 dark:from-emerald-500/10 via-surface to-surface text-content antialiased">
-        <!-- شريط علوي -->
-        <header class="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-            <div class="flex items-center gap-2">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-lg font-bold text-white">
-                    ت
-                </span>
-                <span class="text-lg font-semibold text-emerald-800 dark:text-emerald-200">تحفيظ</span>
+    <div
+        class="min-h-dvh bg-gradient-to-b from-teal-50 via-surface-muted to-surface-muted dark:from-teal-500/10 dark:via-surface-muted dark:to-surface-muted"
+    >
+        <header class="sticky top-0 z-nav border-b border-edge bg-surface/90 backdrop-blur pt-safe">
+            <div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+                <BrandMark href="/" label="تحفيظ" />
+                <nav class="flex items-center gap-2" aria-label="روابط الدخول">
+                    <AppButton v-if="canLogin" :href="route('login')" size="sm">تسجيل الدخول</AppButton>
+                </nav>
             </div>
-
-            <nav class="flex items-center gap-4 text-sm font-medium">
-                <Link
-                    v-if="canLogin"
-                    :href="route('login')"
-                    class="text-content-body transition hover:text-emerald-700 dark:hover:text-emerald-300"
-                >
-                    تسجيل الدخول
-                </Link>
-            </nav>
         </header>
 
-        <!-- المحتوى الرئيسي -->
-        <main class="mx-auto flex max-w-5xl flex-col items-center px-6 py-16 text-center sm:py-24">
-            <span class="mb-4 inline-block rounded-full bg-emerald-100 dark:bg-emerald-500/15 px-4 py-1 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+        <main class="mx-auto w-full max-w-6xl px-4 pb-16 pt-12 text-center sm:px-6 sm:pt-20 lg:px-8">
+            <span
+                class="inline-flex items-center gap-2 rounded-full bg-teal-100 px-4 py-1 text-sm font-medium text-teal-800 dark:bg-teal-500/15 dark:text-teal-200"
+            >
+                <AppIcon name="sparkles" size="sm" />
                 منصة سحابية لإدارة حلقات القرآن الكريم
             </span>
 
-            <h1 class="text-3xl font-extrabold leading-tight text-content sm:text-5xl">
-                تحفيظ<span class="text-emerald-600 dark:text-emerald-400"> — منصة إدارة حلقات القرآن الكريم</span>
+            <h1 class="mx-auto mt-5 max-w-3xl text-3xl font-extrabold leading-tight text-content-strong sm:text-5xl">
+                تحفيظ — إدارة حلقات القرآن الكريم
             </h1>
 
-            <p class="mt-6 max-w-2xl text-base leading-relaxed text-content-soft sm:text-lg">
+            <p class="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-content-soft sm:text-lg">
                 إدارة متكاملة للمساجد والحلقات والمعلمين والطلاب، مع تتبّع التسميع والحفظ والمراجعة،
                 وإصدار التقارير والشهادات، في بيئة آمنة ومتعددة المستأجرين.
             </p>
 
-            <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-                <Link
-                    v-if="canLogin"
-                    :href="route('login')"
-                    class="rounded-lg bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700"
-                >
-                    تسجيل الدخول
-                </Link>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <AppButton v-if="canLogin" :href="route('login')" size="lg">تسجيل الدخول</AppButton>
             </div>
 
-            <!-- مزايا مبسطة -->
-            <div class="mt-20 grid w-full grid-cols-1 gap-6 text-right sm:grid-cols-3">
-                <div class="rounded-2xl border border-edge-soft bg-surface p-6 shadow-sm">
-                    <div class="mb-3 text-2xl">📖</div>
-                    <h3 class="mb-1 font-semibold text-content">تتبّع التسميع</h3>
-                    <p class="text-sm text-content-soft">تسجيل الحفظ والمراجعة لكل طالب بدقة وسهولة.</p>
-                </div>
-                <div class="rounded-2xl border border-edge-soft bg-surface p-6 shadow-sm">
-                    <div class="mb-3 text-2xl">🕌</div>
-                    <h3 class="mb-1 font-semibold text-content">إدارة الحلقات</h3>
-                    <p class="text-sm text-content-soft">تنظيم المساجد والحلقات والمعلمين في مكان واحد.</p>
-                </div>
-                <div class="rounded-2xl border border-edge-soft bg-surface p-6 shadow-sm">
-                    <div class="mb-3 text-2xl">🏆</div>
-                    <h3 class="mb-1 font-semibold text-content">شهادات وتقارير</h3>
-                    <p class="text-sm text-content-soft">إصدار الشهادات وتقارير الأداء بشكل آلي وموثّق.</p>
-                </div>
-            </div>
+            <ul class="mt-14 grid w-full grid-cols-1 gap-4 text-start sm:grid-cols-3 sm:gap-6">
+                <li v-for="feature in features" :key="feature.title" class="card p-5 sm:p-6">
+                    <span
+                        class="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300"
+                    >
+                        <AppIcon :name="feature.icon" size="lg" />
+                    </span>
+                    <h2 class="font-semibold text-content-strong">{{ feature.title }}</h2>
+                    <p class="mt-1 text-sm leading-relaxed text-content-soft">{{ feature.description }}</p>
+                </li>
+            </ul>
         </main>
 
-        <footer class="mx-auto max-w-5xl px-6 py-8 text-center text-sm text-content-faint">
+        <footer class="border-t border-edge py-6 text-center text-sm text-content-muted">
             &copy; تحفيظ. جميع الحقوق محفوظة.
         </footer>
     </div>

@@ -23,12 +23,12 @@ function goBack(): void {
             <div>
                 <button
                     type="button"
-                    class="text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300"
+                    class="text-sm link"
                     @click="goBack"
                 >
                     → رجوع
                 </button>
-                <h2 class="mt-1 text-xl font-semibold leading-tight text-content-strong">
+                <h2 class="mt-1 text-lg font-semibold leading-tight text-content-strong sm:text-xl">
                     {{ student.user?.name ?? 'طالب' }}
                 </h2>
             </div>
@@ -36,7 +36,7 @@ function goBack(): void {
 
         <div class="mx-auto max-w-7xl space-y-6">
             <!-- معلومات الطالب -->
-            <div class="rounded-lg bg-surface p-6 shadow-sm">
+            <div class="card p-6">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
                     <div>
                         <p class="text-sm text-content-muted">الحالة</p>
