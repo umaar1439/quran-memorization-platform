@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Models\Mosque;
 use App\Models\User;
+use App\Support\RoleHierarchy;
 
 /**
  * كل تحقق يبدأ بحد المستأجر (organization_id match) قبل فحص الصلاحية
@@ -15,7 +16,7 @@ class MosquePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('circles.view') || $user->can('students.view') || $user->hasRole('super-admin');
+        return $user->can('circles.view') || $user->can('students.view') || $user->hasRole(RoleHierarchy::SUPER_ADMIN);
     }
 
     public function view(User $user, Mosque $mosque): bool
@@ -52,11 +53,12 @@ class MosquePolicy
 
     /**
      * حد المستأجر: Super Admin يتجاوزه بالتصميم؛ غير ذلك يجب تطابق
-     * organization_id تماماً (§6.4).
+     * organization_id تماماً (§6.4). مقارنة بـ null أو بسجل بلا منظمة
+     * تُرجِع false دائماً (Fail-Closed).
      */
     private function withinTenant(User $user, Mosque $mosque): bool
     {
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole(RoleHierarchy::SUPER_ADMIN)) {
             return true;
         }
 

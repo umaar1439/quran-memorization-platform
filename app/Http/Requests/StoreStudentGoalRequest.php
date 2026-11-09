@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\StudentGoalData;
 use App\Enums\GoalTargetType;
 use App\Enums\PeriodType;
 use App\Models\StudentGoal;
@@ -52,5 +53,13 @@ class StoreStudentGoalRequest extends FormRequest
                 $validator->errors()->add('surah_id', __('messages.goals.scope_required'));
             }
         });
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toData(): StudentGoalData
+    {
+        return StudentGoalData::fromArray($this->validated());
     }
 }

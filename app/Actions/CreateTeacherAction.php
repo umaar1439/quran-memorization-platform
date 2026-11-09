@@ -24,9 +24,18 @@ class CreateTeacherAction
 
     public function execute(TeacherData $data, User $admin): TeacherProfile
     {
-        return DB::transaction(function () use ($data, $admin): TeacherProfile {
-            $organizationId = (int) $admin->organization_id;
+        // Fail-Closed (P0): مسؤول بلا منظمة يعني معلماً بلا عزل مستأجرين،
+        // لأن organization_id كان سيُكتب null/0 صامتاً. الـ Policy ترفض ذلك
+        // أصلاً، وهذا حارس ثانٍ للأتمتة والاستدعاء المباشر للـ Action.
+        abort_if(
+            $admin->organization_id === null,
+            403,
+            __('messages.teachers.no_organization_context'),
+        );
 
+        $organizationId = (int) $admin->organization_id;
+
+        return DB::transaction(function () use ($data, $organizationId): TeacherProfile {
             $user = $data->userId !== null
                 ? $this->linkExistingUser($data, $organizationId)
                 : $this->createUser($data, $organizationId);

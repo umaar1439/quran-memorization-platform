@@ -30,7 +30,14 @@ class UpdateFeatureFlagRequest extends FormRequest
         ];
     }
 
-    public function enabled(): bool
+    /**
+     * الحمولة المُصادَق عليها: قيمة منطقية واحدة لتبديل العلم.
+     *
+     * لا نُغلِّفها في DTO عمداً — DTO يوصف بنية بيانات (عدة حقول/أنواع)،
+     * وقيمة boolean مفردة لا تضيف أي بنية تُحمى من الأخطاء. اسم `toData`
+     * موحَّد مع بقية الطلبات، وأي حقل جديد مستقبلاً يتحول إلى DTO.
+     */
+    public function toData(): bool
     {
         return $this->boolean('enabled');
     }

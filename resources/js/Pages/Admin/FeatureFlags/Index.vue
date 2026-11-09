@@ -1,27 +1,18 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import EmptyState from '@/Components/EmptyState.vue';
-import { useToast } from '@/Composables/useToast';
-import type { FeatureFlag } from '@/Types';
+import { useFeatureFlags } from '@/Composables/useFeatureFlags';
+import type { FeatureFlagIndexPageProps, FeatureFlagPageModel } from '@/Types/api/featureFlag';
 
-defineProps<{
-    flags: FeatureFlag[];
-    isSuperAdmin: boolean;
-}>();
+/**
+ * صفحة عرض فقط: التبديل وحالة الحفظ في useFeatureFlags/FeatureFlagApi.
+ * القائمة أصلاً مُفلترة حسب ما يملك المستخدم تبديله (FeatureFlagQuery)،
+ * والصلاحية تُفرض على الخادم في FeatureFlagPolicy.
+ */
+const props = defineProps<FeatureFlagIndexPageProps>();
 
-const toast = useToast();
-
-function toggle(flag: FeatureFlag): void {
-    router.patch(
-        route('admin.feature-flags.update', flag.id),
-        { enabled: !flag.enabled },
-        {
-            preserveScroll: true,
-            onSuccess: () => toast.success('تم تحديث حالة الميزة بنجاح.'),
-        },
-    );
-}
+const { flags, toggle, isPending } = useFeatureFlags(props);
 </script>
 
 <template>
@@ -37,18 +28,26 @@ function toggle(flag: FeatureFlag): void {
 
             <div v-else class="overflow-hidden card">
                 <ul class="divide-y divide-edge-soft">
-                    <li v-for="flag in flags" :key="flag.id" class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-4">
+                    <li
+                        v-for="flag in flags"
+                        :key="flag.id"
+                        class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-4"
+                    >
                         <div>
                             <p class="font-medium text-content-strong">{{ flag.key }}</p>
-                            <p v-if="flag.organization_id === null" class="text-xs text-content-muted">إعداد عالمي افتراضي</p>
+                            <p v-if="flag.organization_id === null" class="text-xs text-content-muted">
+                                إعداد عالمي افتراضي
+                            </p>
                         </div>
                         <button
                             type="button"
                             role="switch"
                             :aria-checked="flag.enabled"
-                            class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors"
+                            :aria-label="`تبديل ${flag.key}`"
+                            :disabled="isPending(flag as FeatureFlagPageModel)"
+                            class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors disabled:opacity-60"
                             :class="flag.enabled ? 'bg-teal-600' : 'bg-edge-strong'"
-                            @click="toggle(flag)"
+                            @click="toggle(flag as FeatureFlagPageModel)"
                         >
                             <span
                                 class="inline-block h-5 w-5 transform rounded-full bg-surface transition-transform"

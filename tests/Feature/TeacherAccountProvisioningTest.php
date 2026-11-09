@@ -15,6 +15,7 @@ use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\PermissionRegistrar;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(RefreshDatabase::class);
 
@@ -150,7 +151,6 @@ test('UpdateTeacherAction moves circle links without changing the organization',
             'status' => 'active',
             'circles' => [$circleB->id],
         ]),
-        $admin,
     );
 
     expect($circleA->fresh()?->teacher_id)->toBeNull()
@@ -187,4 +187,46 @@ test('DeleteTeacherAction unlinks circles and soft deletes the account', functio
         ->and(TeacherProfile::query()->find($profile->id))->toBeNull()
         ->and(User::query()->find($userId))->toBeNull()
         ->and(User::withTrashed()->withoutGlobalScopes()->find($userId))->not->toBeNull();
+});
+
+/**
+ * P0 (Fail-Closed): مسؤول بلا organization_id كان يُنشئ معلماً بـ
+ * organization_id = null/0 فيفلت الحساب من كل عزل مستأجرين. الـ Policy ترفض
+ * الإنشاء، والـ Action يرمي 403 كحارس ثانٍ.
+ */
+test('teacher creation is fail-closed when the actor has no organization', function () {
+    $org = Organization::factory()->create();
+    seedRolesForProvisioning($org->id);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
+
+    $orgAdminWithoutOrg = User::factory()->create(['organization_id' => null]);
+    $orgAdminWithoutOrg->assignRole('org-admin');
+
+    // الصلاحية موجودة، لكن غياب المنظمة وحده يكفي لرفض الإنشاء.
+    expect($orgAdminWithoutOrg->can('create', TeacherProfile::class))->toBeFalse();
+});
+
+test('CreateTeacherAction aborts with 403 instead of writing an orphan teacher account', function () {
+    $org = Organization::factory()->create();
+    seedRolesForProvisioning($org->id);
+    app(PermissionRegistrar::class)->setPermissionsTeamId($org->id);
+
+    $mosque = Mosque::factory()->create(['organization_id' => $org->id]);
+    $circle = Circle::factory()->create(['organization_id' => $org->id, 'mosque_id' => $mosque->id]);
+
+    $orgAdminWithoutOrg = User::factory()->create(['organization_id' => null]);
+
+    expect(fn () => app(CreateTeacherAction::class)->execute(
+        TeacherData::fromArray([
+            'name' => 'معلم بلا منظمة',
+            'email' => 'orphan-teacher@example.com',
+            'password' => 'password',
+            'status' => 'active',
+            'circles' => [$circle->id],
+        ]),
+        $orgAdminWithoutOrg,
+    ))->toThrow(HttpException::class);
+
+    expect(User::withoutGlobalScopes()->where('email', 'orphan-teacher@example.com')->exists())->toBeFalse()
+        ->and(TeacherProfile::query()->where('user_id', $orgAdminWithoutOrg->id)->exists())->toBeFalse();
 });

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\EnrollmentData;
 use App\Models\Circle;
 use App\Models\Mosque;
 use App\Models\StudentProfile;
@@ -24,16 +25,13 @@ class TransferStudentAction
         private readonly CreateAuditLogAction $createAuditLog,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $data  بيانات مُصادَق عليها من TransferStudentRequest::validated()
-     */
-    public function execute(array $data, User $actor, ?Request $request = null): StudentTransfer
+    public function execute(EnrollmentData $data, User $actor, ?Request $request = null): StudentTransfer
     {
         return DB::transaction(function () use ($data, $actor, $request) {
             // قفل صف الطالب لمنع Race Condition (اعتماد نقلين متزامنين
             // لنفس الطالب لوجهتين مختلفتين — §4 تهديد #15).
             $student = StudentProfile::withoutGlobalScopes()
-                ->where('id', $data['student_id'])
+                ->where('id', $data->studentId)
                 ->lockForUpdate()
                 ->first();
 
@@ -55,7 +53,7 @@ class TransferStudentAction
 
             // 2) التحقق أن الوجهة (to_mosque, to_circle) في نفس المنظمة.
             $toMosque = Mosque::withoutGlobalScopes()
-                ->where('id', $data['to_mosque_id'])
+                ->where('id', $data->toMosqueId)
                 ->where('organization_id', $student->organization_id)
                 ->first();
 
@@ -65,7 +63,7 @@ class TransferStudentAction
                 ]);
             }
 
-            $toCircleId = $data['to_circle_id'] ?? null;
+            $toCircleId = $data->toCircleId;
 
             if ($toCircleId !== null) {
                 $toCircle = Circle::withoutGlobalScopes()
@@ -90,8 +88,8 @@ class TransferStudentAction
                 'from_circle_id' => $fromCircleId,
                 'to_circle_id' => $toCircleId,
                 'transferred_by_user_id' => $actor->id,
-                'reason' => $data['reason'] ?? null,
-                'metadata' => $data['metadata'] ?? null,
+                'reason' => $data->reason,
+                'metadata' => $data->metadata,
                 'transferred_at' => now(),
             ]);
 
@@ -103,7 +101,11 @@ class TransferStudentAction
 
             $student->mosque_id = $toMosque->id;
             $student->circle_id = $toCircleId;
-            $student->save();
+
+            // saveQuietly مقصود: النقل يُدقَّق مرة واحدة كحدث نطاقي
+            // (student.transferred) يحمل السبب والفاعل. لو أُطلق حدث Eloquent
+            // العادي لتضاعف السجل عبر AuditModelChanges (student.updated).
+            $student->saveQuietly();
 
             // 6) سجل AuditLog.
             $this->createAuditLog->execute(

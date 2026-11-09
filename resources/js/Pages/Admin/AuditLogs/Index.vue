@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import FormInput from '@/Components/FormInput.vue';
-import type { AuditLog, PaginatedResponse } from '@/Types';
+import { useAuditLogs } from '@/Composables/useAuditLogs';
+import type { AuditLogIndexPageProps, AuditLogPageModel } from '@/Types/api/auditLog';
 
-const props = defineProps<{
-    auditLogs: PaginatedResponse<AuditLog>;
-    filters: { event?: string; user_id?: string; from?: string; to?: string };
-}>();
+/**
+ * صفحة عرض فقط (قراءة بحتة): شريط الفلاتر والترقيم في
+ * useAuditLogs/AuditLogApi. لا يوجد أي إجراء كتابة على سجل التدقيق.
+ */
+const props = defineProps<AuditLogIndexPageProps>();
+
+const { filters, applyFilters, onPageChange } = useAuditLogs(props);
 
 const columns: DataTableColumn[] = [
     { key: 'event', label: 'الحدث' },
@@ -18,20 +21,6 @@ const columns: DataTableColumn[] = [
     { key: 'ip_address', label: 'عنوان IP' },
     { key: 'created_at', label: 'التاريخ' },
 ];
-
-const filterForm = reactive({
-    event: props.filters.event ?? '',
-    from: props.filters.from ?? '',
-    to: props.filters.to ?? '',
-});
-
-function applyFilters(): void {
-    router.get(route('admin.audit-logs.page'), { ...filterForm }, { preserveState: true, replace: true });
-}
-
-function onPageChange(page: number): void {
-    router.get(route('admin.audit-logs.page'), { ...filterForm, page }, { preserveState: true });
-}
 </script>
 
 <template>
@@ -43,14 +32,14 @@ function onPageChange(page: number): void {
         </template>
 
         <div class="mx-auto max-w-7xl space-y-4">
-            <div class="grid grid-cols-1 gap-4 card p-4 sm:grid-cols-4">
-                <FormInput id="filter-event" v-model="filterForm.event" label="الحدث" placeholder="مثال: created" />
-                <FormInput id="filter-from" v-model="filterForm.from" type="date" label="من تاريخ" />
-                <FormInput id="filter-to" v-model="filterForm.to" type="date" label="إلى تاريخ" />
+            <div class="card grid grid-cols-1 gap-4 p-4 sm:grid-cols-4">
+                <FormInput id="filter-event" v-model="filters.event" label="الحدث" placeholder="مثال: created" />
+                <FormInput id="filter-from" v-model="filters.from" type="date" label="من تاريخ" />
+                <FormInput id="filter-to" v-model="filters.to" type="date" label="إلى تاريخ" />
                 <div class="flex items-end">
                     <button
                         type="button"
-                        class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard w-full"
+                        class="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                         @click="applyFilters"
                     >
                         تصفية
@@ -68,7 +57,13 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-user="{ row }">
-                    {{ (row as unknown as AuditLog).user?.name ?? 'النظام' }}
+                    {{ (row as AuditLogPageModel).user?.name ?? 'النظام' }}
+                </template>
+                <template #cell-auditable_type="{ row }">
+                    {{ (row as AuditLogPageModel).auditable_type ?? '—' }}
+                </template>
+                <template #cell-ip_address="{ row }">
+                    {{ (row as AuditLogPageModel).ip_address ?? '—' }}
                 </template>
             </DataTable>
         </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\ReportData;
 use App\Models\Report;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,5 +29,13 @@ class StoreReportRequest extends FormRequest
             'report_type' => ['required', 'string', 'max:100'],
             'parameters' => ['nullable', 'array'],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toData(): ReportData
+    {
+        return ReportData::fromArray($this->validated());
     }
 }

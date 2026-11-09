@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\ReportData;
 use App\Enums\ReportStatus;
 use App\Jobs\GenerateReportJob;
 use App\Models\Report;
@@ -18,10 +19,7 @@ use Illuminate\Validation\ValidationException;
  */
 class GenerateReportAction
 {
-    /**
-     * @param  array<string, mixed>  $data  report_type, parameters (اختياري)
-     */
-    public function execute(array $data, User $actor): Report
+    public function execute(ReportData $data, User $actor): Report
     {
         if (! $actor->can('reports.generate')) {
             throw ValidationException::withMessages([
@@ -38,8 +36,8 @@ class GenerateReportAction
         $report = Report::create([
             'organization_id' => $actor->organization_id,
             'requested_by' => $actor->id,
-            'report_type' => $data['report_type'],
-            'parameters' => $data['parameters'] ?? null,
+            'report_type' => $data->reportType,
+            'parameters' => $data->parameters,
             'status' => ReportStatus::Queued,
         ]);
 

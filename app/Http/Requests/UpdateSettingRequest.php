@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\SettingEntryData;
 use App\Models\Setting;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -46,19 +47,18 @@ class UpdateSettingRequest extends FormRequest
     }
 
     /**
-     * الإعدادات المُصادَق عليها بصيغة DTO خفيفة (مصفوفة مفاتيح مسموحة صراحةً).
+     * الإعدادات المُصادَق عليها كقائمة DTOs (مفاتيح مسموحة صراحةً).
      *
-     * @return list<array{key: string, value: string|null, group: string|null}>
+     * @return list<SettingEntryData>
      */
-    public function settings(): array
+    public function toData(): array
     {
         /** @var array<int, array{key: string, value?: string|null, group?: string|null}> $items */
         $items = $this->validated('settings');
 
-        return array_values(array_map(static fn (array $item): array => [
-            'key' => $item['key'],
-            'value' => $item['value'] ?? null,
-            'group' => $item['group'] ?? null,
-        ], $items));
+        return array_values(array_map(
+            static fn (array $item): SettingEntryData => SettingEntryData::fromArray($item),
+            $items,
+        ));
     }
 }

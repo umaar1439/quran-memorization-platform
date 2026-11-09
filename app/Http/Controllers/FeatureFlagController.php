@@ -39,7 +39,7 @@ class FeatureFlagController extends Controller
 
     public function update(UpdateFeatureFlagRequest $request, FeatureFlag $flag): RedirectResponse
     {
-        $this->updateFlag->execute($flag, $request->enabled(), $request->user());
+        $this->updateFlag->execute($flag, $request->toData(), $request->user());
 
         return back()->with('success', __('messages.feature_flags.updated'));
     }

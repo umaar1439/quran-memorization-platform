@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\CertificateData;
 use App\Enums\CertificateStatus;
 use App\Jobs\GenerateCertificateJob;
 use App\Models\Certificate;
@@ -28,10 +29,8 @@ class GenerateCertificateAction
     /**
      * الفحص الأول (دفاع الطبقة الأولى): الدور + الصلاحية + الـ feature flag.
      * الفحص الثاني يحدث داخل GenerateCertificateJob وقت التنفيذ الفعلي.
-     *
-     * @param  array<string, mixed>  $data  student_id, certificate_type, exam_id (اختياري)
      */
-    public function execute(array $data, User $actor): Certificate
+    public function execute(CertificateData $data, User $actor): Certificate
     {
         if (! $actor->hasRole('org-admin') && ! $actor->hasRole('super-admin')) {
             throw ValidationException::withMessages([
@@ -51,7 +50,7 @@ class GenerateCertificateAction
             ]);
         }
 
-        $student = StudentProfile::withoutGlobalScopes()->findOrFail($data['student_id']);
+        $student = StudentProfile::withoutGlobalScopes()->findOrFail($data->studentId);
 
         if ($actor->organization_id === null || $actor->organization_id !== $student->organization_id) {
             throw ValidationException::withMessages([
@@ -62,8 +61,8 @@ class GenerateCertificateAction
         $certificate = Certificate::withoutGlobalScopes()->create([
             'organization_id' => $student->organization_id,
             'student_id' => $student->id,
-            'exam_id' => $data['exam_id'] ?? null,
-            'certificate_type' => $data['certificate_type'],
+            'exam_id' => $data->examId,
+            'certificate_type' => $data->certificateType,
             'issued_at' => now(),
             'issued_by' => $actor->id,
             'verification_code' => (string) Str::ulid(),

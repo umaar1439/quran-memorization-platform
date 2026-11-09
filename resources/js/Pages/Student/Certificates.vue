@@ -1,30 +1,18 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import EmptyState from '@/Components/EmptyState.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import type { PaginatedResponse, Certificate } from '@/Types';
+import { useCertificates } from '@/Composables/useCertificates';
+import type { CertificatesPageProps } from '@/Types/api/certificate';
 
-const props = defineProps<{
-    certificates: PaginatedResponse<Certificate>;
-}>();
+/**
+ * صفحة عرض فقط: تنسيق التواريخ والتسميات والترقيم في
+ * useCertificates/CertificateApi.
+ */
+const props = defineProps<CertificatesPageProps>();
 
-const statusLabels: Record<string, string> = {
-    issued: 'مُصدرة',
-    revoked: 'ملغاة',
-};
-
-function formatDate(value: string): string {
-    return new Date(value).toLocaleDateString('ar-EG', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-}
-
-function onPageChange(page: number): void {
-    router.get(route('student.certificates'), { page }, { preserveState: true });
-}
+const { certificates, statusLabels, formatDate, onPageChange } = useCertificates(props);
 </script>
 
 <template>

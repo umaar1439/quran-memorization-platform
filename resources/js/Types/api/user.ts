@@ -53,7 +53,7 @@ export type UserFormPayload = {
 };
 
 /** أخطاء التحقق القادمة من FormRequest (مفتاح الحقل => أول رسالة). */
-export type FormErrors = Partial<Record<string, string>>;
+export type { FormErrors } from '@/Types/api/common';
 
 /** يطابق ما يُسلسِله RoleController::page داخل roles. */
 export type RoleMatrixRow = {

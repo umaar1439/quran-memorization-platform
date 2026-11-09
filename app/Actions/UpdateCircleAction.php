@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\CircleData;
 use App\Models\Circle;
 
 /**
@@ -12,12 +13,15 @@ use App\Models\Circle;
  */
 class UpdateCircleAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreCircleRequest::validated()
-     */
-    public function execute(Circle $circle, array $data): Circle
+    public function execute(Circle $circle, CircleData $data): Circle
     {
-        $circle->update($data);
+        $circle->mosque_id = $data->mosqueId;
+        $circle->teacher_id = $data->teacherId;
+        $circle->name = $data->name;
+        $circle->level = $data->level;
+        $circle->capacity = $data->capacity;
+        $circle->status = $data->status;
+        $circle->save();
 
         return $circle;
     }

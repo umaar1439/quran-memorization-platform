@@ -28,7 +28,7 @@ class RoleAndPermissionSeeder extends Seeder
         'circles.view', 'circles.manage',
         'students.view', 'students.manage', 'students.transfer',
         'recitations.create', 'recitations.view', 'recitations.update',
-        'attendance.view',
+        'attendance.view', 'attendance.manage',
         'reports.generate', 'reports.download',
         'certificates.generate',
         'settings.manage',
@@ -83,7 +83,7 @@ class RoleAndPermissionSeeder extends Seeder
             'circles.view', 'circles.manage',
             'students.view', 'students.manage', 'students.transfer',
             'recitations.view',
-            'attendance.view',
+            'attendance.view', 'attendance.manage',
             'reports.generate', 'reports.download',
             'exams.view', 'exams.create',
         ]);
@@ -92,7 +92,7 @@ class RoleAndPermissionSeeder extends Seeder
             'circles.view',
             'students.view',
             'recitations.create', 'recitations.view', 'recitations.update',
-            'attendance.view',
+            'attendance.view', 'attendance.manage',
             'exams.view',
         ]);
 

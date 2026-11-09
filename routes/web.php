@@ -17,6 +17,7 @@ use App\Http\Controllers\RecitationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\StudentAttendanceController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentExamsController;
@@ -47,6 +48,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/student-transfers', [StudentTransferController::class, 'index'])->name('student-transfers.index');
     Route::post('/student-transfers', [StudentTransferController::class, 'store'])->name('student-transfers.store');
+
+    // حضور الطلاب اليومي: كتابة فقط هنا — التفويض عبر AttendancePolicy في
+    // FormRequest والـ Action (لا حصر بالدور حتى لا يُرفض المشرف بخطأ مضلل).
+    Route::post('/attendance', [StudentAttendanceController::class, 'store'])->name('attendance.store');
+    Route::post('/attendance/bulk', [StudentAttendanceController::class, 'bulk'])->name('attendance.bulk');
 
     // Phase 8: الأهداف والتحليلات.
     Route::get('/student-goals', [StudentGoalController::class, 'index'])->name('student-goals.index');
@@ -151,13 +157,20 @@ Route::middleware('auth')->group(function () {
         Route::get('/student-transfers', [StudentTransferController::class, 'page'])->name('student-transfers.page');
         Route::get('/reports', [ReportController::class, 'page'])->name('reports.page');
         Route::get('/audit-logs-page', [AuditLogController::class, 'page'])->name('audit-logs.page');
+
+        // حضور الطلاب: ورقة يومية + سجل مفصّل — التفويض بـ AttendancePolicy::viewAny.
+        Route::get('/attendance', [StudentAttendanceController::class, 'page'])->name('attendance.index');
     });
 
     Route::middleware('role:teacher')->prefix('teacher')->name('teacher.')->group(function () {
         Route::get('/dashboard', [TeacherCircleController::class, 'page'])->name('dashboard');
         Route::get('/quick-recitation', [RecitationController::class, 'page'])->name('quick-recitation');
         Route::get('/my-circle', [TeacherCircleController::class, 'page'])->name('my-circle');
-        Route::get('/attendance', [TeacherAttendanceController::class, 'page'])->name('attendance.page');
+
+        // "الحضور" في التنقل تعني ورقة حضور الطلاب اليومية (الوحدة الفعلية)،
+        // وسجل نشاط المعلم المُشتق بقي متاحاً على /teacher/activity.
+        Route::get('/attendance', [StudentAttendanceController::class, 'teacherPage'])->name('attendance.page');
+        Route::get('/activity', [TeacherAttendanceController::class, 'page'])->name('activity.page');
     });
 
     Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {

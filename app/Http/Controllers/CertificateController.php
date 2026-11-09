@@ -34,7 +34,7 @@ class CertificateController extends Controller
     public function store(StoreCertificateRequest $request): JsonResponse
     {
         $certificate = $this->generateCertificate->execute(
-            $request->validated(),
+            $request->toData(),
             $request->user(),
         );
 

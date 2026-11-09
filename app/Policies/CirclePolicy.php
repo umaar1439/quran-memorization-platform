@@ -6,12 +6,17 @@ namespace App\Policies;
 
 use App\Models\Circle;
 use App\Models\User;
+use App\Support\RoleHierarchy;
 
+/**
+ * كل فحص يبدأ بحد المستأجر (organization_id match) قبل صلاحية Spatie.
+ * المعلم يرى حلقاته فقط؛ ومن لا يملك circles.view لا يرى شيئاً.
+ */
 class CirclePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->can('circles.view') || $user->hasRole('super-admin');
+        return $user->can('circles.view') || $user->hasRole(RoleHierarchy::SUPER_ADMIN);
     }
 
     public function view(User $user, Circle $circle): bool
@@ -50,9 +55,13 @@ class CirclePolicy
         return $user->can('circles.manage');
     }
 
+    /**
+     * حد المستأجر: Super Admin يتجاوزه بالتصميم؛ غير ذلك تطابق تام.
+     * مقارنة تنتهي بـ null تُرجِع false دائماً (Fail-Closed).
+     */
     private function withinTenant(User $user, Circle $circle): bool
     {
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole(RoleHierarchy::SUPER_ADMIN)) {
             return true;
         }
 

@@ -32,7 +32,7 @@ class StudentGoalController extends Controller
 
     public function store(StoreStudentGoalRequest $request): JsonResponse
     {
-        $goal = $this->createGoal->execute($request->validated());
+        $goal = $this->createGoal->execute($request->toData());
 
         return (new StudentGoalResource($goal))->response()->setStatusCode(201);
     }
@@ -51,7 +51,7 @@ class StudentGoalController extends Controller
 
     public function update(UpdateStudentGoalRequest $request, StudentGoal $studentGoal): JsonResponse
     {
-        $studentGoal = $this->updateGoal->execute($studentGoal, $request->validated());
+        $studentGoal = $this->updateGoal->execute($studentGoal, $request->toData());
 
         return (new StudentGoalResource($studentGoal))->response();
     }

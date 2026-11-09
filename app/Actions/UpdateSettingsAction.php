@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\SettingEntryData;
 use App\Models\Setting;
 use App\Support\SettingsCache;
 use Illuminate\Support\Facades\DB;
@@ -19,17 +20,17 @@ class UpdateSettingsAction
     ) {}
 
     /**
-     * @param  list<array{key: string, value?: string|null, group?: string|null}>  $settings
+     * @param  list<SettingEntryData>  $settings
      */
     public function execute(int $organizationId, array $settings): void
     {
         $now = now();
 
-        $rows = array_map(static fn (array $item): array => [
+        $rows = array_map(static fn (SettingEntryData $item): array => [
             'organization_id' => $organizationId,
-            'key' => $item['key'],
-            'value' => $item['value'] ?? null,
-            'group' => $item['group'] ?? null,
+            'key' => $item->key,
+            'value' => $item->value,
+            'group' => $item->group,
             'created_at' => $now,
             'updated_at' => $now,
         ], $settings);

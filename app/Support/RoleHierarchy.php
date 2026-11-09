@@ -28,6 +28,15 @@ final class RoleHierarchy
     public const SUPER_ADMIN = 'super-admin';
 
     /**
+     * الأدوار المسموح إسنادها كمسؤول حلقة (circle.teacher_id): المعلم
+     * والمشرف. أي دور آخر — أو مستخدم بلا دور — يُرفَض بـ 422 بدل إسناد
+     * حلقة لطالب أو ولي أمر (سلامة بيانات + حدود تفويض CirclePolicy::view).
+     *
+     * @var list<string>
+     */
+    public const CIRCLE_TEACHER_ROLES = ['teacher', 'supervisor'];
+
+    /**
      * رتبة كل دور؛ الأدوار غير المذكورة = 0.
      *
      * @var array<string, int>

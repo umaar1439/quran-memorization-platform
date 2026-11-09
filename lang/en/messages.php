@@ -21,6 +21,7 @@ return [
         'deleted' => 'Teacher deleted successfully.',
         'missing_account' => 'No account is linked to this teacher.',
         'cross_organization_link' => 'You cannot link an account from another organization.',
+        'no_organization_context' => 'A teacher cannot be added without an organization context.',
     ],
 
     'students' => [
@@ -29,6 +30,8 @@ return [
         'deleted' => 'Student deleted successfully.',
         'missing_profile' => 'No student profile is linked to this user.',
         'missing_guardian_profile' => 'No guardian profile is linked to this user.',
+        'no_organization_context' => 'A student cannot be added without an organization context.',
+        'missing_account' => 'No user account is linked to this student.',
     ],
 
     'users' => [
@@ -50,12 +53,32 @@ return [
         'created' => 'Mosque added successfully.',
         'updated' => 'Mosque updated successfully.',
         'deleted' => 'Mosque deleted successfully.',
+        'no_organization_context' => 'A mosque cannot be added without an organization context.',
     ],
 
     'circles' => [
         'created' => 'Circle added successfully.',
         'updated' => 'Circle updated successfully.',
         'deleted' => 'Circle deleted successfully.',
+        'no_organization_context' => 'A circle cannot be added without an organization context.',
+        'teacher_role_required' => 'The selected user does not hold a teacher or supervisor role.',
+    ],
+
+    'attendance' => [
+        'created' => 'Attendance recorded successfully.',
+        'updated' => 'Attendance record updated successfully.',
+        'bulk_saved' => 'Attendance for :count students saved successfully.',
+        'student_missing' => 'The selected student does not exist or was deleted.',
+        'student_other_org' => 'The student belongs to another organization.',
+        'not_your_circle' => 'You cannot record attendance for a student outside your circles.',
+        'forbidden' => 'You are not allowed to record attendance.',
+        'circle_missing' => 'The selected circle does not exist or was deleted.',
+        'circle_mismatch' => 'One of the selected students does not belong to this circle.',
+        'duplicate_students' => 'The same student cannot appear twice in one sheet.',
+        'empty_records' => 'There are no attendance records to save.',
+        'too_many_records' => 'The number of records exceeds the allowed limit.',
+        'invalid_date' => 'Invalid date format (expected YYYY-MM-DD).',
+        'future_date' => 'Attendance cannot be recorded for a future date.',
     ],
 
     'settings' => [

@@ -28,9 +28,15 @@ class TeacherProfilePolicy
         return $user->can('teachers.view');
     }
 
+    /**
+     * Fail-Closed: إنشاء معلم يشترط سياق منظمة صريحاً — حتى لـ super-admin —
+     * لأن معلمًا بلا organization_id يفلت من كل عزل مستأجرين (حساب «يتيم»).
+     * الفحص يتكرر في CreateTeacherAction كحارس ثانٍ.
+     */
     public function create(User $user): bool
     {
-        return $user->can('teachers.create');
+        return $user->organization_id !== null
+            && $user->can('teachers.create');
     }
 
     public function update(User $user, TeacherProfile $teacher): bool

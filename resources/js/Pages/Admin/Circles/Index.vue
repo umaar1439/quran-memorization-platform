@@ -1,28 +1,42 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { useToast } from '@/Composables/useToast';
-import type { Circle, Mosque, PaginatedResponse, PageProps, User } from '@/Types';
+import { useCircles } from '@/Composables/useCircles';
+import type { CircleIndexPageProps, CirclePageModel } from '@/Types/api/circle';
 
-const props = defineProps<{
-    circles: PaginatedResponse<Circle>;
-    mosques: Pick<Mosque, 'id' | 'name'>[];
-    teachers: Pick<User, 'id' | 'name'>[];
-    filters: { search?: string; mosque_id?: string };
-}>();
+/**
+ * صفحة عرض فقط: الحالة والنماذج والنداءات كلها في useCircles/CircleApi.
+ * أزرار الكتابة مرتبطة بـ canManage المستخرجة من صلاحيات المستخدم.
+ */
+const props = defineProps<CircleIndexPageProps>();
 
-// الصفحة متاحة لكل من يملك circles.view (بما فيهم المعلم)، لكن الإنشاء
-// والتعديل والحذف تتطلب circles.manage — فلا تُعرض أزرار تنتهي بـ 403.
-const canManage = computed(() => usePage<PageProps>().props.auth.permissions.includes('circles.manage'));
-
-const toast = useToast();
+const {
+    form,
+    errors,
+    processing,
+    statusOptions,
+    canManage,
+    mosqueOptions,
+    teacherOptions,
+    showModal,
+    editingCircle,
+    showDeleteConfirm,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+    submit,
+    confirmDelete,
+    cancelDelete,
+    deleteCircle,
+    onSearch,
+    onPageChange,
+} = useCircles(props);
 
 const columns: DataTableColumn[] = [
     { key: 'name', label: 'اسم الحلقة' },
@@ -32,87 +46,6 @@ const columns: DataTableColumn[] = [
     { key: 'status', label: 'الحالة' },
     { key: 'actions', label: 'إجراءات' },
 ];
-
-const statusOptions = [
-    { value: 'active', label: 'نشط' },
-    { value: 'inactive', label: 'غير نشط' },
-];
-
-const mosqueOptions = props.mosques.map((m) => ({ value: m.id, label: m.name }));
-const teacherOptions = props.teachers.map((t) => ({ value: t.id, label: t.name }));
-
-const showModal = ref(false);
-const editingCircle = ref<Circle | null>(null);
-const showDeleteConfirm = ref(false);
-const circleToDelete = ref<Circle | null>(null);
-
-const form = useForm({
-    mosque_id: '' as string | number,
-    teacher_id: '' as string | number,
-    name: '',
-    level: '',
-    capacity: '' as string | number,
-    status: 'active',
-});
-
-function openCreateModal(): void {
-    editingCircle.value = null;
-    form.reset();
-    showModal.value = true;
-}
-
-function openEditModal(circle: Circle): void {
-    editingCircle.value = circle;
-    form.mosque_id = circle.mosque_id;
-    form.teacher_id = circle.teacher_id ?? '';
-    form.name = circle.name;
-    form.level = circle.level ?? '';
-    form.capacity = circle.capacity ?? '';
-    form.status = circle.status;
-    showModal.value = true;
-}
-
-function submit(): void {
-    if (editingCircle.value) {
-        form.patch(route('admin.circles.update', editingCircle.value.id), {
-            onSuccess: () => {
-                showModal.value = false;
-                toast.success('تم تحديث بيانات الحلقة بنجاح.');
-            },
-        });
-    } else {
-        form.post(route('admin.circles.store'), {
-            onSuccess: () => {
-                showModal.value = false;
-                toast.success('تم إضافة الحلقة بنجاح.');
-            },
-        });
-    }
-}
-
-function confirmDelete(circle: Circle): void {
-    circleToDelete.value = circle;
-    showDeleteConfirm.value = true;
-}
-
-function deleteCircle(): void {
-    if (!circleToDelete.value) return;
-
-    router.delete(route('admin.circles.destroy', circleToDelete.value.id), {
-        onSuccess: () => {
-            showDeleteConfirm.value = false;
-            toast.success('تم حذف الحلقة بنجاح.');
-        },
-    });
-}
-
-function onSearch(value: string): void {
-    router.get(route('admin.circles.index'), { ...props.filters, search: value }, { preserveState: true, replace: true });
-}
-
-function onPageChange(page: number): void {
-    router.get(route('admin.circles.index'), { ...props.filters, page }, { preserveState: true });
-}
 </script>
 
 <template>
@@ -144,24 +77,24 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-mosque="{ row }">
-                    {{ (row as unknown as Circle).mosque?.name ?? '—' }}
+                    {{ (row as unknown as CirclePageModel).mosque?.name ?? '—' }}
                 </template>
                 <template #cell-teacher="{ row }">
-                    {{ (row as unknown as Circle).teacher?.name ?? 'غير معيّن' }}
+                    {{ (row as unknown as CirclePageModel).teacher?.name ?? 'غير معيّن' }}
                 </template>
                 <template #cell-status="{ row }">
-                    <StatusBadge :status="(row as unknown as Circle).status" />
+                    <StatusBadge :status="(row as unknown as CirclePageModel).status" />
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                        <Link :href="route('admin.circles.show', (row as unknown as Circle).id)" class="link">
+                        <Link :href="route('admin.circles.show', (row as unknown as CirclePageModel).id)" class="link">
                             عرض
                         </Link>
                         <template v-if="canManage">
-                            <button type="button" class="link" @click="openEditModal(row as unknown as Circle)">
+                            <button type="button" class="link" @click="openEditModal(row as unknown as CirclePageModel)">
                                 تعديل
                             </button>
-                            <button type="button" class="link-danger" @click="confirmDelete(row as unknown as Circle)">
+                            <button type="button" class="link-danger" @click="confirmDelete(row as unknown as CirclePageModel)">
                                 حذف
                             </button>
                         </template>
@@ -170,26 +103,26 @@ function onPageChange(page: number): void {
             </DataTable>
         </div>
 
-        <Modal :show="showModal" @close="showModal = false">
+        <Modal :show="showModal" @close="closeModal">
             <form class="p-6" @submit.prevent="submit">
                 <h3 class="mb-4 text-lg font-semibold text-content">
                     {{ editingCircle ? 'تعديل حلقة' : 'إضافة حلقة جديدة' }}
                 </h3>
                 <div class="space-y-4">
-                    <FormSelect id="circle-mosque" v-model="form.mosque_id" label="المسجد" :options="mosqueOptions" required :error="form.errors.mosque_id" />
-                    <FormInput id="circle-name" v-model="form.name" label="اسم الحلقة" required :error="form.errors.name" />
-                    <FormSelect id="circle-teacher" v-model="form.teacher_id" label="المعلم" :options="teacherOptions" :error="form.errors.teacher_id" />
-                    <FormInput id="circle-level" v-model="form.level" label="المستوى" :error="form.errors.level" />
-                    <FormInput id="circle-capacity" v-model="form.capacity" type="number" label="السعة القصوى" :error="form.errors.capacity" />
-                    <FormSelect id="circle-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="form.errors.status" />
+                    <FormSelect id="circle-mosque" v-model="form.mosque_id" label="المسجد" :options="mosqueOptions" required :error="errors.mosque_id" />
+                    <FormInput id="circle-name" v-model="form.name" label="اسم الحلقة" required :error="errors.name" />
+                    <FormSelect id="circle-teacher" v-model="form.teacher_id" label="المعلم" :options="teacherOptions" :error="errors.teacher_id" />
+                    <FormInput id="circle-level" v-model="form.level" label="المستوى" :error="errors.level" />
+                    <FormInput id="circle-capacity" v-model="form.capacity" type="number" label="السعة القصوى" :error="errors.capacity" />
+                    <FormSelect id="circle-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="errors.status" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="closeModal">
                         إلغاء
                     </button>
                     <button
                         type="submit"
-                        :disabled="form.processing"
+                        :disabled="processing"
                         class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     >
                         حفظ
@@ -203,8 +136,9 @@ function onPageChange(page: number): void {
             title="حذف الحلقة"
             message="هل أنت متأكد من حذف هذه الحلقة؟"
             danger
+            :processing="processing"
             @confirm="deleteCircle"
-            @cancel="showDeleteConfirm = false"
+            @cancel="cancelDelete"
         />
     </AuthenticatedLayout>
 </template>

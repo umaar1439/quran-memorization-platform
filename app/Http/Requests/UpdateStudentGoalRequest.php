@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\StudentGoalUpdateData;
 use App\Enums\GoalStatus;
 use App\Enums\GoalTargetType;
 use App\Enums\PeriodType;
@@ -40,5 +41,13 @@ class UpdateStudentGoalRequest extends FormRequest
             'period_end' => ['sometimes', 'date', 'after_or_equal:period_start'],
             'status' => ['sometimes', Rule::in([GoalStatus::Active->value, GoalStatus::Completed->value])],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toData(): StudentGoalUpdateData
+    {
+        return StudentGoalUpdateData::fromArray($this->validated());
     }
 }

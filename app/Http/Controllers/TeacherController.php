@@ -47,14 +47,14 @@ class TeacherController extends Controller
 
     public function store(StoreTeacherRequest $request): RedirectResponse
     {
-        $this->createTeacher->execute($request->toDto(), $request->user());
+        $this->createTeacher->execute($request->toData(), $request->user());
 
         return back()->with('success', __('messages.teachers.created'));
     }
 
     public function update(UpdateTeacherRequest $request, TeacherProfile $teacher): RedirectResponse
     {
-        $this->updateTeacher->execute($teacher, $request->toDto(), $request->user());
+        $this->updateTeacher->execute($teacher, $request->toData());
 
         return back()->with('success', __('messages.teachers.updated'));
     }

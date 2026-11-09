@@ -8,6 +8,7 @@ use App\Actions\TransferStudentAction;
 use App\Http\Requests\TransferStudentRequest;
 use App\Http\Resources\StudentTransferResource;
 use App\Models\StudentTransfer;
+use App\Models\User;
 use App\Queries\MosqueOptionsQuery;
 use App\Queries\StudentTransferQuery;
 use Illuminate\Http\JsonResponse;
@@ -30,9 +31,12 @@ class StudentTransferController extends Controller
 
     public function store(TransferStudentRequest $request): JsonResponse
     {
+        /** @var User $actor */
+        $actor = $request->user();
+
         $transfer = $this->transferStudent->execute(
-            $request->validated(),
-            $request->user(),
+            $request->toData(),
+            $actor,
             $request,
         );
 

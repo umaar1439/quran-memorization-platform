@@ -9,10 +9,12 @@ use App\Actions\DeleteCircleAction;
 use App\Actions\UpdateCircleAction;
 use App\Http\Requests\StoreCircleRequest;
 use App\Models\Circle;
+use App\Models\User;
 use App\Queries\CircleDashboardQuery;
 use App\Queries\CircleDirectoryQuery;
 use App\Queries\MosqueOptionsQuery;
 use App\Queries\UserOptionsQuery;
+use App\Support\RoleHierarchy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,14 +40,19 @@ class CircleController extends Controller
     {
         $this->authorize('viewAny', Circle::class);
 
+        /** @var User $actor */
+        $actor = $request->user();
+
         return Inertia::render('Admin/Circles/Index', [
             'circles' => $this->circles->paginate(
                 $request->string('search')->toString() ?: null,
                 $request->filled('mosque_id') ? $request->integer('mosque_id') : null,
-                $request->user(),
+                $actor,
             ),
             'mosques' => $this->mosqueOptions->all(),
-            'teachers' => $this->userOptions->byRole('teacher'),
+            // أدوار مسؤول الحلقة فقط، ومقيَّدة بمنظمة الفاعل داخل الاستعلام
+            // (User بلا Global Scope) — وبنفس قائمة StoreCircleRequest.
+            'teachers' => $this->userOptions->byRoles(RoleHierarchy::CIRCLE_TEACHER_ROLES, $actor),
             'filters' => $request->only('search', 'mosque_id'),
         ]);
     }
@@ -64,14 +71,17 @@ class CircleController extends Controller
 
     public function store(StoreCircleRequest $request): RedirectResponse
     {
-        $this->createCircle->execute($request->validated(), $request->user());
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $this->createCircle->execute($request->toData(), $actor);
 
         return back()->with('success', __('messages.circles.created'));
     }
 
     public function update(StoreCircleRequest $request, Circle $circle): RedirectResponse
     {
-        $this->updateCircle->execute($circle, $request->validated());
+        $this->updateCircle->execute($circle, $request->toData());
 
         return back()->with('success', __('messages.circles.updated'));
     }

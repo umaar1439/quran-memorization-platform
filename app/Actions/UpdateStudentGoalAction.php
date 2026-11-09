@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\StudentGoalUpdateData;
 use App\Enums\GoalStatus;
 use App\Models\StudentGoal;
 use App\Notifications\GoalCompletionNotification;
@@ -14,14 +15,15 @@ use App\Notifications\GoalCompletionNotification;
  */
 class UpdateStudentGoalAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من UpdateStudentGoalRequest::validated()
-     */
-    public function execute(StudentGoal $goal, array $data): StudentGoal
+    public function execute(StudentGoal $goal, StudentGoalUpdateData $data): StudentGoal
     {
         $wasCompleted = $goal->status === GoalStatus::Completed;
 
-        $goal->update($data);
+        $attributes = $data->attributes();
+
+        if ($attributes !== []) {
+            $goal->update($attributes);
+        }
 
         if (! $wasCompleted && $goal->status === GoalStatus::Completed) {
             $goal->student?->user?->notify(new GoalCompletionNotification(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\CertificateData;
 use App\Models\Certificate;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -41,5 +42,13 @@ class StoreCertificateRequest extends FormRequest
             ],
             'certificate_type' => ['required', 'string', 'max:100'],
         ];
+    }
+
+    /**
+     * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
+     */
+    public function toData(): CertificateData
+    {
+        return CertificateData::fromArray($this->validated());
     }
 }

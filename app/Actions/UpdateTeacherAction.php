@@ -6,12 +6,14 @@ namespace App\Actions;
 
 use App\DTOs\TeacherData;
 use App\Models\TeacherProfile;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
  * تحديث بيانات معلم: حساب المستخدم + الملف المهني + ربط الحلقات،
  * داخل معاملة واحدة. الحقول المحمية (organization_id) لا تُعدَّل هنا إطلاقاً.
+ *
+ * لا يستقبل المسؤول الحالي: التفويض يحدث في UpdateTeacherRequest/الـ Policy،
+ * والمنظمة تُشتق من ملف المعلم نفسه.
  */
 class UpdateTeacherAction
 {
@@ -19,9 +21,14 @@ class UpdateTeacherAction
         private readonly SyncTeacherCirclesAction $syncCircles,
     ) {}
 
-    public function execute(TeacherProfile $teacher, TeacherData $data, User $admin): TeacherProfile
+    public function execute(TeacherProfile $teacher, TeacherData $data): TeacherProfile
     {
-        return DB::transaction(function () use ($teacher, $data, $admin): TeacherProfile {
+        // مصدر الحقيقة للمنظمة هو ملف المعلم نفسه، لا المسؤول الحالي: الـ Policy
+        // تضمن تطابقهما، واشتقاقه من هنا يمنع تمرير organization_id فارغ
+        // (super-admin بلا منظمة) إلى SyncTeacherCirclesAction.
+        $organizationId = (int) $teacher->organization_id;
+
+        return DB::transaction(function () use ($teacher, $data, $organizationId): TeacherProfile {
             $user = $teacher->user;
             abort_if($user === null, 404, __('messages.teachers.missing_account'));
 
@@ -42,7 +49,7 @@ class UpdateTeacherAction
                 'hired_at' => $data->hiredAt,
             ]);
 
-            $this->syncCircles->execute($user, $data->circleIds, (int) $admin->organization_id);
+            $this->syncCircles->execute($user, $data->circleIds, $organizationId);
 
             return $teacher;
         });

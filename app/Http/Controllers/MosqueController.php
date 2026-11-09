@@ -9,6 +9,7 @@ use App\Actions\DeleteMosqueAction;
 use App\Actions\UpdateMosqueAction;
 use App\Http\Requests\StoreMosqueRequest;
 use App\Models\Mosque;
+use App\Models\User;
 use App\Queries\MosqueDirectoryQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,14 +44,17 @@ class MosqueController extends Controller
 
     public function store(StoreMosqueRequest $request): RedirectResponse
     {
-        $this->createMosque->execute($request->validated(), $request->user());
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $this->createMosque->execute($request->toData(), $actor);
 
         return back()->with('success', __('messages.mosques.created'));
     }
 
     public function update(StoreMosqueRequest $request, Mosque $mosque): RedirectResponse
     {
-        $this->updateMosque->execute($mosque, $request->validated());
+        $this->updateMosque->execute($mosque, $request->toData());
 
         return back()->with('success', __('messages.mosques.updated'));
     }

@@ -54,7 +54,7 @@ class UpdateTeacherRequest extends FormRequest
     /**
      * تحويل البيانات المُصادَق عليها إلى DTO لتمريرها إلى الـ Action.
      */
-    public function toDto(): TeacherData
+    public function toData(): TeacherData
     {
         return TeacherData::fromArray($this->validated());
     }

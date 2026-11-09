@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\TransferStudentAction;
+use App\DTOs\EnrollmentData;
 use App\Enums\RecitationType;
 use App\Models\AuditLog;
 use App\Models\Circle;
@@ -104,11 +105,11 @@ test('old recitation records keep their original circle_id after a transfer (no 
     $orgAdmin->assignRole($roles['org-admin']);
 
     $action = app(TransferStudentAction::class);
-    $action->execute([
+    $action->execute(EnrollmentData::fromArray([
         'student_id' => $student->id,
         'to_mosque_id' => $mosque->id,
         'to_circle_id' => $toCircle->id,
-    ], $orgAdmin);
+    ]), $orgAdmin);
 
     $student->refresh();
     $recitation->refresh();

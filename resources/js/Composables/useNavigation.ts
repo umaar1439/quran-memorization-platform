@@ -23,6 +23,7 @@ const adminNav: NavItem[] = [
     { label: 'الحلقات', routeName: 'admin.circles.index', icon: 'circles' },
     { label: 'المعلمون', routeName: 'admin.teachers.index', icon: 'user-check' },
     { label: 'الطلاب', routeName: 'admin.students.index', icon: 'graduation-cap' },
+    { label: 'الحضور', routeName: 'admin.attendance.index', icon: 'check-circle' },
     { label: 'المستخدمون', routeName: 'admin.users.index', icon: 'users' },
     { label: 'الأدوار والصلاحيات', routeName: 'admin.roles.index', icon: 'shield-check', permission: 'roles.view' },
     { label: 'الإعدادات', routeName: 'admin.settings.index', icon: 'settings' },
@@ -37,6 +38,7 @@ const supervisorNav: NavItem[] = [
     { label: 'الحلقات', routeName: 'admin.circles.index', icon: 'circles' },
     { label: 'المعلمون', routeName: 'admin.teachers.index', icon: 'user-check' },
     { label: 'الطلاب', routeName: 'admin.students.index', icon: 'graduation-cap' },
+    { label: 'الحضور', routeName: 'admin.attendance.index', icon: 'check-circle' },
     { label: 'التقارير', routeName: 'admin.reports.page', icon: 'chart' },
 ];
 

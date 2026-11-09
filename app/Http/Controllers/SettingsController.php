@@ -37,7 +37,7 @@ class SettingsController extends Controller
     {
         $this->updateSettings->execute(
             (int) $request->user()->organization_id,
-            $request->settings(),
+            $request->toData(),
         );
 
         return back()->with('success', __('messages.settings.saved'));

@@ -4,22 +4,35 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\CircleData;
 use App\Models\Circle;
 use App\Models\User;
 
 /**
  * إنشاء حلقة داخل منظمة المسؤول الحالي. mosque_id/teacher_id سبق التحقق
- * من انتمائهما لنفس المنظمة في StoreCircleRequest (IDOR Defense).
+ * من انتمائهما لنفس المنظمة ومن صلاحية teacher_id (StoreCircleRequest).
  */
 class CreateCircleAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreCircleRequest::validated()
-     */
-    public function execute(array $data, User $admin): Circle
+    public function execute(CircleData $data, User $actor): Circle
     {
-        $data['organization_id'] = $admin->organization_id;
+        $organizationId = $actor->organization_id;
 
-        return Circle::create($data);
+        // Fail-Closed: بلا منظمة لا يمكن نسبة الحلقة (كان يعطي 500).
+        if ($organizationId === null) {
+            abort(403, __('messages.circles.no_organization_context'));
+        }
+
+        $circle = new Circle;
+        $circle->organization_id = $organizationId;
+        $circle->mosque_id = $data->mosqueId;
+        $circle->teacher_id = $data->teacherId;
+        $circle->name = $data->name;
+        $circle->level = $data->level;
+        $circle->capacity = $data->capacity;
+        $circle->status = $data->status;
+        $circle->save();
+
+        return $circle;
     }
 }

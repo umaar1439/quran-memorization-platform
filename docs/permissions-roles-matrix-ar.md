@@ -64,6 +64,7 @@
 | 26 | `exams.approve` | الامتحانات | اعتماد/تصحيح نتيجة امتحان | `ExamResultPolicy::approve` + `CorrectExamResultAction` (و`ExamPolicy::approve` معرّفة لكن لا مسار يستخدمها) | org-admin, super-admin |
 | 27 | `roles.view` | الأدوار والصلاحيات | عرض مصفوفة صلاحيات الأدوار | `RolePolicy::viewAny/view` + `can:roles.view` | org-admin, super-admin |
 | 28 | `roles.manage` | الأدوار والصلاحيات | تعديل صلاحيات أي دور (عدا `super-admin`) | `RolePolicy::update` + `SyncRolePermissionsRequest` + `can:roles.manage` | org-admin, super-admin |
+| 29 | `attendance.manage` | حضور الطلاب | تسجيل/تصحيح حضور الطلاب اليومي | `AttendancePolicy::create` + `StoreAttendanceRequest`/`BulkAttendanceRequest` + `RecordAttendanceAction`/`BulkRecordAttendanceAction` | org-admin, supervisor, teacher, super-admin |
 
 ⚠️ **ملاحظة على #14**: `recitations.create` ممنوحة لـ org-admin وsuper-admin في الـ Seeder، لكن `RecitationPolicy::create()` تشترط `hasRole('teacher')` أيضاً — أي أن المدير يملك الصلاحية ولا يستطيع تسجيل تسميع فعلياً. هذا مثال على «الصلاحية وحدها لا تكفي» (انظر §6).
 
@@ -77,8 +78,8 @@
 |---|---|---|---|---|
 | `super-admin` | عابر للمنظمات (يتجاوز `organization_id`) | 28/28 | كل الصلاحيات | `/admin/dashboard` |
 | `org-admin` | منظمته فقط | 28/28 | كل الصلاحيات | `/admin/dashboard` |
-| `supervisor` | منظمته فقط | 15 | teachers (4) + circles.view + circles.manage + students.view + students.manage + students.transfer + recitations.view + attendance.view + reports.generate + reports.download + exams.view + exams.create | `/admin/dashboard` |
-| `teacher` | حلقاته وسجلاته فقط | 7 | circles.view + students.view + recitations.create + recitations.view + recitations.update + attendance.view + exams.view | `/teacher/dashboard` |
+| `supervisor` | منظمته فقط | 16 | teachers (4) + circles.view + circles.manage + students.view + students.manage + students.transfer + recitations.view + attendance.view + attendance.manage + reports.generate + reports.download + exams.view + exams.create | `/admin/dashboard` |
+| `teacher` | حلقاته وسجلاته فقط | 8 | circles.view + students.view + recitations.create + recitations.view + recitations.update + attendance.view + attendance.manage + exams.view | `/teacher/dashboard` |
 | `student` | ملفه فقط | 1 | recitations.view | `/student/dashboard` |
 | `parent` | أبناؤه المصرّح لهم فقط | 1 | recitations.view | `/parent/dashboard` |
 
@@ -105,6 +106,7 @@
 | `recitations.view` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `recitations.update` | ✅ | ✅ | — | ✅ | — | — |
 | `attendance.view` | ✅ | ✅ | ✅ | ✅ | — | — |
+| `attendance.manage` | ✅ | ✅ | ✅ | ✅ | — | — |
 | `reports.generate` | ✅ | ✅ | ✅ | — | — | — |
 | `reports.download` | ✅ | ✅ | ✅ | — | — | — |
 | `certificates.generate` | ✅ | ✅ | — | — | — | — |
@@ -137,6 +139,7 @@
 | ملف طالب / لوحة طالب | `GET /students/{student}` | `auth` فقط | `StudentProfilePolicy::view` (مدير/مشرف/معلم حلقته/الطالب نفسه/الولي) | حسب السياسة (لا حصر بالأدوار) |
 | التسميع | `/recitations` | `auth` فقط | `recitations.view` للعرض، `recitations.create` + دور teacher للتسجيل، `recitations.update` لمنشئ السجل/المدير | teacher (تسجيل)، الجميع تقريباً (عرض مقيّد) |
 | الحضور | `/teacher-attendances` | `auth` فقط | `attendance.view` | org-admin, supervisor, teacher (سجلاته) |
+| حضور الطلاب (يومي) | `GET /admin/attendance` و`GET /teacher/attendance` — الكتابة: `POST /attendance` و`POST /attendance/bulk` | مجموعة الأدوار الإدارية / `role:teacher` — الكتابة `auth` فقط | `AttendancePolicy::viewAny` للعرض، و`create` للكتابة (`attendance.manage` + نطاق المنظمة + ملكية المعلم للحلقة) | org-admin, supervisor (كل المنظمة) — teacher (حلقاته فقط) |
 | أهداف الطلاب | `/student-goals` | `auth` فقط | `students.manage` أو دور teacher/parent/student | org-admin, supervisor, teacher, student, parent |
 | نقل الطلاب | `/student-transfers` | `auth` فقط (`page` داخل مجموعة الأدوار) | `students.transfer` للعرض، **`request()`/`approve()` بالأدوار فقط** | عرض: org-admin/supervisor/super-admin — طلب: supervisor/org-admin/super-admin — اعتماد: org-admin/super-admin |
 | الامتحانات | `/exams` + `/admin/exams` | `auth` (JSON) و`role:` لصفحة الإدارة | `exams.view` للعرض، `exams.create` للإنشاء/التعديل | JSON: org-admin, supervisor, teacher — صفحة الإدارة: org-admin, supervisor (المعلم يملك `exams.view` لكنه محجوب بالـ role) |
@@ -163,7 +166,7 @@
 |---|---|---|---|---|
 | 1 | الدخول إلى `/admin/*` (المساجد، المستخدمون، المعلمون، الطلاب، الإعدادات، الأعلام، التقارير، سجل التدقيق، صفحات الامتحانات والنقل) | `routes/web.php` مجموعة `role:org-admin\|supervisor\|super-admin` | مستخدم يملك كل الصلاحيات لكن دوره ليس إدارياً يُرفض بـ 403 | تحويل كل مجموعة إلى `can:<permission>` كما فُعل في الحلقات |
 | 2 | سجل التدقيق | `AuditLogPolicy::viewAny/view` (أدوار فقط) | لا يمكن منح صلاحية «عرض السجلات» لدور آخر، ولا سحبها من org-admin | إضافة `audit_logs.view` واستبدال الدور بالصلاحية |
-| 3 | إنشاء/تعديل حضور المعلمين | `TeacherAttendancePolicy::create/update` (أدوار فقط) | `attendance.view` تسمح بالعرض فقط، ولا توجد صلاحية كتابة | إضافة `attendance.manage` |
+| 3 | إنشاء/تعديل حضور المعلمين | `TeacherAttendancePolicy::create/update` (أدوار فقط) | `attendance.view` تسمح بالعرض فقط، ولا مسار كتابة لحضور المعلمين أصلاً (الحضور مُشتق من النشاط) | `attendance.manage` أُضيفت لحضور **الطلاب** فقط؛ حضور المعلمين يبقى مُشتقاً فلا حاجة لمسار كتابة |
 | 4 | طلب/اعتماد نقل الطالب | `StudentTransferPolicy::request/approve` (أدوار فقط) | `students.transfer` تسمح بالعرض فقط | إضافة `students.transfer.request` و`students.transfer.approve` |
 | 5 | لوحة التحكم الإدارية | Gate `view-admin-dashboard` (أدوار فقط) | لا يمكن إنشاء دور «مشرف تقارير» يرى اللوحة | تحويله إلى `dashboard.admin.view` |
 | 6 | تسجيل التسميع | `RecitationPolicy::create` يشترط دور `teacher` | org-admin يملك `recitations.create` لكنه لا يستطيع التسجيل | فصل الشرط: صلاحية + نطاق، وإبقاء «ملكية الحلقة» للمعلم |

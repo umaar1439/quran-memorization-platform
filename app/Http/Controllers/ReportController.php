@@ -33,7 +33,7 @@ class ReportController extends Controller
     public function store(StoreReportRequest $request): JsonResponse
     {
         $report = $this->generateReport->execute(
-            $request->validated(),
+            $request->toData(),
             $request->user(),
         );
 

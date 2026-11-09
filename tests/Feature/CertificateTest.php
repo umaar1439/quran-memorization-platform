@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\GenerateCertificateAction;
+use App\DTOs\CertificateData;
 use App\Enums\CertificateStatus;
 use App\Jobs\GenerateCertificateJob;
 use App\Models\AuditLog;
@@ -254,10 +255,13 @@ test('the generation job re-verifies the feature flag and fails if it was disabl
 
     $this->actingAs($orgAdmin);
 
-    $certificate = app(GenerateCertificateAction::class)->execute([
-        'student_id' => $student->id,
-        'certificate_type' => 'إتمام حفظ',
-    ], $orgAdmin);
+    $certificate = app(GenerateCertificateAction::class)->execute(
+        CertificateData::fromArray([
+            'student_id' => $student->id,
+            'certificate_type' => 'إتمام حفظ',
+        ]),
+        $orgAdmin,
+    );
 
     expect($certificate->status)->toBe(CertificateStatus::Pending);
 

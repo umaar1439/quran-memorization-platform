@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\MosqueData;
 use App\Models\Mosque;
 
 /**
@@ -12,12 +13,14 @@ use App\Models\Mosque;
  */
 class UpdateMosqueAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreMosqueRequest::validated()
-     */
-    public function execute(Mosque $mosque, array $data): Mosque
+    public function execute(Mosque $mosque, MosqueData $data): Mosque
     {
-        $mosque->update($data);
+        $mosque->name = $data->name;
+        $mosque->address = $data->address;
+        $mosque->city = $data->city;
+        $mosque->phone = $data->phone;
+        $mosque->status = $data->status;
+        $mosque->save();
 
         return $mosque;
     }

@@ -14,12 +14,14 @@ use App\Models\Mosque;
 use App\Models\Recitation;
 use App\Models\Report;
 use App\Models\Setting;
+use App\Models\StudentAttendance;
 use App\Models\StudentGoal;
 use App\Models\StudentProfile;
 use App\Models\StudentTransfer;
 use App\Models\TeacherAttendance;
 use App\Models\TeacherProfile;
 use App\Models\User;
+use App\Policies\AttendancePolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\CertificatePolicy;
 use App\Policies\CirclePolicy;
@@ -66,6 +68,7 @@ class AuthServiceProvider extends ServiceProvider
         StudentTransfer::class => StudentTransferPolicy::class,
         AuditLog::class => AuditLogPolicy::class,
         StudentGoal::class => StudentGoalPolicy::class,
+        StudentAttendance::class => AttendancePolicy::class,
         User::class => UserPolicy::class,
         Role::class => RolePolicy::class,
     ];

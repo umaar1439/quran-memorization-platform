@@ -6,6 +6,7 @@ namespace App\Policies;
 
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Support\RoleHierarchy;
 
 /**
  * Org Admin يرى الكل في منظمته، Supervisor يرى مساجده، Teacher يرى
@@ -19,7 +20,7 @@ class StudentProfilePolicy
         return $user->can('students.view')
             || $user->hasRole('student')
             || $user->hasRole('parent')
-            || $user->hasRole('super-admin');
+            || $user->hasRole(RoleHierarchy::SUPER_ADMIN);
     }
 
     public function view(User $user, StudentProfile $student): bool
@@ -29,7 +30,7 @@ class StudentProfilePolicy
         }
 
         // مدير النظام العام / مدير المنظمة / المشرف: وصول كامل لكل طلاب المنظومة.
-        if ($user->hasRole(['super-admin', 'org-admin', 'supervisor'])) {
+        if ($user->hasRole([RoleHierarchy::SUPER_ADMIN, 'org-admin', 'supervisor'])) {
             return true;
         }
 
@@ -54,7 +55,9 @@ class StudentProfilePolicy
 
     public function create(User $user): bool
     {
-        return $user->can('students.manage');
+        // Fail-Closed: بلا سياق منظمة لا يمكن نسبة الطالب لأي مستأجر.
+        return $user->organization_id !== null
+            && $user->can('students.manage');
     }
 
     public function update(User $user, StudentProfile $student): bool
@@ -111,7 +114,7 @@ class StudentProfilePolicy
 
     private function withinTenant(User $user, StudentProfile $student): bool
     {
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole(RoleHierarchy::SUPER_ADMIN)) {
             return true;
         }
 

@@ -1,35 +1,35 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import Modal from '@/Components/Modal.vue';
-import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { useToast } from '@/Composables/useToast';
-import { useApi } from '@/Composables/useApi';
-import type { PaginatedResponse, Report } from '@/Types';
+import { useReports } from '@/Composables/useReports';
+import type { ReportIndexPageProps, ReportPageModel } from '@/Types/api/report';
 
-const props = defineProps<{
-    reports: PaginatedResponse<Report>;
-}>();
+/**
+ * صفحة عرض فقط: النموذج والأخطاء والتحميل والترقيم في
+ * useReports/ReportApi. زر الطلب مرتبط بصلاحية reports.generate،
+ * وزر التحميل بـ reports.download.
+ */
+const props = defineProps<ReportIndexPageProps>();
 
-const toast = useToast();
-const api = useApi();
-
-const statusLabels: Record<string, string> = {
-    pending: 'قيد المعالجة',
-    processing: 'قيد المعالجة',
-    completed: 'مكتمل',
-    failed: 'فشل',
-};
-
-const reportTypeOptions = [
-    { value: 'students_summary', label: 'ملخص الطلاب' },
-    { value: 'recitations_summary', label: 'ملخص التسميعات' },
-    { value: 'attendance_summary', label: 'ملخص الحضور' },
-];
+const {
+    form,
+    errors,
+    processing,
+    canGenerate,
+    canDownload,
+    statusLabels,
+    reportTypeOptions,
+    showModal,
+    openModal,
+    closeModal,
+    submit,
+    downloadReport,
+    onPageChange,
+} = useReports(props);
 
 const columns: DataTableColumn[] = [
     { key: 'report_type', label: 'نوع التقرير' },
@@ -37,40 +37,6 @@ const columns: DataTableColumn[] = [
     { key: 'created_at', label: 'تاريخ الطلب' },
     { key: 'actions', label: 'إجراءات' },
 ];
-
-const showModal = ref(false);
-const processing = ref(false);
-const errors = reactive<Record<string, string>>({});
-
-const form = reactive({
-    report_type: '',
-});
-
-async function submit(): Promise<void> {
-    processing.value = true;
-    Object.keys(errors).forEach((key) => delete errors[key]);
-
-    try {
-        await api.post(route('reports.store'), { ...form });
-        showModal.value = false;
-        toast.success('تم إرسال طلب التقرير، سيظهر عند اكتماله.');
-        router.reload({ only: ['reports'] });
-    } catch (error) {
-        const validationErrors = api.extractValidationErrors(error);
-        Object.entries(validationErrors).forEach(([key, messages]) => (errors[key] = messages[0]));
-        if (Object.keys(validationErrors).length === 0) toast.error(api.extractErrorMessage(error));
-    } finally {
-        processing.value = false;
-    }
-}
-
-function downloadReport(report: Report): void {
-    window.open(route('reports.download', report.id), '_blank');
-}
-
-function onPageChange(page: number): void {
-    router.get(route('admin.reports.page'), { page }, { preserveState: true });
-}
 </script>
 
 <template>
@@ -81,9 +47,10 @@ function onPageChange(page: number): void {
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">التقارير</h2>
                 <button
+                    v-if="canGenerate"
                     type="button"
                     class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
-                    @click="showModal = true"
+                    @click="openModal"
                 >
                     + طلب تقرير جديد
                 </button>
@@ -101,30 +68,46 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-status="{ row }">
-                    <StatusBadge :status="(row as unknown as Report).status" :labels="statusLabels" />
+                    <StatusBadge :status="(row as ReportPageModel).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
                     <button
-                        v-if="(row as unknown as Report).status === 'completed'"
+                        v-if="canDownload && (row as ReportPageModel).status === 'completed'"
                         type="button"
                         class="link"
-                        @click="downloadReport(row as unknown as Report)"
+                        @click="downloadReport(row as ReportPageModel)"
                     >
                         تنزيل
                     </button>
+                    <span v-else class="text-sm text-content-muted">—</span>
                 </template>
             </DataTable>
         </div>
 
-        <Modal :show="showModal" @close="showModal = false">
+        <Modal :show="showModal" @close="closeModal">
             <form class="p-6" @submit.prevent="submit">
                 <h3 class="mb-4 text-lg font-semibold text-content">طلب تقرير جديد</h3>
-                <FormSelect id="report-type" v-model="form.report_type" label="نوع التقرير" :options="reportTypeOptions" required :error="errors.report_type" />
+                <FormSelect
+                    id="report-type"
+                    v-model="form.report_type"
+                    label="نوع التقرير"
+                    :options="reportTypeOptions"
+                    required
+                    :error="errors.report_type"
+                />
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
+                    <button
+                        type="button"
+                        class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard"
+                        @click="closeModal"
+                    >
                         إلغاء
                     </button>
-                    <button type="submit" :disabled="processing" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard">
+                    <button
+                        type="submit"
+                        :disabled="processing"
+                        class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
+                    >
                         إرسال الطلب
                     </button>
                 </div>
