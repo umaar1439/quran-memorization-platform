@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
@@ -9,7 +9,7 @@ import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
 import { useToast } from '@/Composables/useToast';
-import type { Circle, Mosque, PaginatedResponse, User } from '@/Types';
+import type { Circle, Mosque, PaginatedResponse, PageProps, User } from '@/Types';
 
 const props = defineProps<{
     circles: PaginatedResponse<Circle>;
@@ -17,6 +17,10 @@ const props = defineProps<{
     teachers: Pick<User, 'id' | 'name'>[];
     filters: { search?: string; mosque_id?: string };
 }>();
+
+// الصفحة متاحة لكل من يملك circles.view (بما فيهم المعلم)، لكن الإنشاء
+// والتعديل والحذف تتطلب circles.manage — فلا تُعرض أزرار تنتهي بـ 403.
+const canManage = computed(() => usePage<PageProps>().props.auth.permissions.includes('circles.manage'));
 
 const toast = useToast();
 
@@ -119,6 +123,7 @@ function onPageChange(page: number): void {
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="text-lg font-semibold leading-tight text-content-strong sm:text-xl">الحلقات</h2>
                 <button
+                    v-if="canManage"
                     type="button"
                     class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     @click="openCreateModal"
@@ -152,12 +157,14 @@ function onPageChange(page: number): void {
                         <Link :href="route('admin.circles.show', (row as unknown as Circle).id)" class="link">
                             عرض
                         </Link>
-                        <button type="button" class="link" @click="openEditModal(row as unknown as Circle)">
-                            تعديل
-                        </button>
-                        <button type="button" class="link-danger" @click="confirmDelete(row as unknown as Circle)">
-                            حذف
-                        </button>
+                        <template v-if="canManage">
+                            <button type="button" class="link" @click="openEditModal(row as unknown as Circle)">
+                                تعديل
+                            </button>
+                            <button type="button" class="link-danger" @click="confirmDelete(row as unknown as Circle)">
+                                حذف
+                            </button>
+                        </template>
                     </div>
                 </template>
             </DataTable>

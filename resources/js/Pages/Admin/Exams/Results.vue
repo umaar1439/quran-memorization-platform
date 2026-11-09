@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
@@ -7,17 +6,31 @@ import Modal from '@/Components/Modal.vue';
 import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { useToast } from '@/Composables/useToast';
-import { useApi } from '@/Composables/useApi';
-import type { Exam, ExamResult, PaginatedResponse } from '@/Types';
+import { useExamSubmission } from '@/Composables/useExamSubmission';
+import type { ExamResultPageModel, ExamResultsPageProps } from '@/Types/api/exam';
 
-const props = defineProps<{
-    exam: Exam;
-    results: PaginatedResponse<ExamResult>;
-}>();
+/**
+ * العرض فقط: تسجيل/اعتماد/تصحيح النتائج كلها في useExamSubmission،
+ * وكل نداء شبكة في ExamApi. لا business logic ولا axios هنا.
+ */
+const props = defineProps<ExamResultsPageProps>();
 
-const toast = useToast();
-const api = useApi();
+const {
+    addForm,
+    correctForm,
+    sectionOptions,
+    showAddModal,
+    showCorrectModal,
+    processing,
+    errors,
+    openAddModal,
+    closeAddModal,
+    closeCorrectModal,
+    submitResult,
+    approve,
+    openCorrectModal,
+    submitCorrection,
+} = useExamSubmission(props);
 
 const statusLabels: Record<string, string> = {
     draft: 'مسودة',
@@ -33,91 +46,7 @@ const columns: DataTableColumn[] = [
     { key: 'actions', label: 'إجراءات' },
 ];
 
-const showAddModal = ref(false);
-const showCorrectModal = ref(false);
-const correctingResult = ref<ExamResult | null>(null);
-const processing = ref(false);
-const errors = reactive<Record<string, string>>({});
-
-const addForm = reactive({
-    exam_section_id: '' as string | number,
-    student_id: '' as string | number,
-    score: '' as string | number,
-    grade: '',
-    status: 'draft',
-});
-
-const correctForm = reactive({
-    score: '' as string | number,
-    grade: '',
-    reason: '',
-});
-
-const sectionOptions = props.exam.sections?.map((s) => ({
-    value: s.id,
-    label: `${s.section_type} (سورة ${s.surah_number ?? '—'})`,
-})) ?? [];
-
-function clearErrors(): void {
-    Object.keys(errors).forEach((key) => delete errors[key]);
-}
-
-async function submitResult(): Promise<void> {
-    processing.value = true;
-    clearErrors();
-
-    try {
-        await api.post(route('exam-results.store'), { ...addForm, exam_id: props.exam.id });
-        showAddModal.value = false;
-        toast.success('تم تسجيل النتيجة بنجاح.');
-        router.reload({ only: ['results'] });
-    } catch (error) {
-        const validationErrors = api.extractValidationErrors(error);
-        Object.entries(validationErrors).forEach(([key, messages]) => (errors[key] = messages[0]));
-        if (Object.keys(validationErrors).length === 0) toast.error(api.extractErrorMessage(error));
-    } finally {
-        processing.value = false;
-    }
-}
-
-async function approve(result: ExamResult): Promise<void> {
-    try {
-        await api.post(route('exam-results.approve', result.id));
-        toast.success('تم اعتماد النتيجة بنجاح.');
-        router.reload({ only: ['results'] });
-    } catch (error) {
-        toast.error(api.extractErrorMessage(error));
-    }
-}
-
-function openCorrectModal(result: ExamResult): void {
-    correctingResult.value = result;
-    correctForm.score = result.score;
-    correctForm.grade = result.grade ?? '';
-    correctForm.reason = '';
-    showCorrectModal.value = true;
-}
-
-async function submitCorrection(): Promise<void> {
-    if (!correctingResult.value) return;
-
-    processing.value = true;
-    clearErrors();
-
-    try {
-        await api.post(route('exam-results.correct', correctingResult.value.id), { ...correctForm });
-        showCorrectModal.value = false;
-        toast.success('تم تصحيح النتيجة بنجاح.');
-        router.reload({ only: ['results'] });
-    } catch (error) {
-        const validationErrors = api.extractValidationErrors(error);
-        Object.entries(validationErrors).forEach(([key, messages]) => (errors[key] = messages[0]));
-        if (Object.keys(validationErrors).length === 0) toast.error(api.extractErrorMessage(error));
-    } finally {
-        processing.value = false;
-    }
-}
-
+// تنقّل Inertia (ترقيم الصفحات) — ليس منطق عمل، بل بناء رابط من معرف الامتحان.
 function onPageChange(page: number): void {
     router.get(route('admin.exams.results', props.exam.id), { page }, { preserveState: true });
 }
@@ -133,7 +62,7 @@ function onPageChange(page: number): void {
                 <button
                     type="button"
                     class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
-                    @click="showAddModal = true"
+                    @click="openAddModal"
                 >
                     + تسجيل نتيجة
                 </button>
@@ -151,18 +80,18 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-student="{ row }">
-                    {{ (row as unknown as ExamResult).student?.user?.name ?? '—' }}
+                    {{ (row as unknown as ExamResultPageModel).student?.user?.name ?? '—' }}
                 </template>
                 <template #cell-status="{ row }">
-                    <StatusBadge :status="(row as unknown as ExamResult).status" :labels="statusLabels" />
+                    <StatusBadge :status="(row as unknown as ExamResultPageModel).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                         <button
-                            v-if="(row as unknown as ExamResult).status !== 'approved'"
+                            v-if="(row as unknown as ExamResultPageModel).status !== 'approved'"
                             type="button"
                             class="text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
-                            @click="approve(row as unknown as ExamResult)"
+                            @click="approve(row as unknown as ExamResultPageModel)"
                         >
                             اعتماد
                         </button>
@@ -170,7 +99,7 @@ function onPageChange(page: number): void {
                             v-else
                             type="button"
                             class="text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline"
-                            @click="openCorrectModal(row as unknown as ExamResult)"
+                            @click="openCorrectModal(row as unknown as ExamResultPageModel)"
                         >
                             تصحيح
                         </button>
@@ -179,7 +108,7 @@ function onPageChange(page: number): void {
             </DataTable>
         </div>
 
-        <Modal :show="showAddModal" @close="showAddModal = false">
+        <Modal :show="showAddModal" @close="closeAddModal">
             <form class="p-6" @submit.prevent="submitResult">
                 <h3 class="mb-4 text-lg font-semibold text-content">تسجيل نتيجة جديدة</h3>
                 <div class="space-y-4">
@@ -189,7 +118,7 @@ function onPageChange(page: number): void {
                     <FormInput id="result-grade" v-model="addForm.grade" label="التقدير" :error="errors.grade" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showAddModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="closeAddModal">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard">
@@ -199,7 +128,7 @@ function onPageChange(page: number): void {
             </form>
         </Modal>
 
-        <Modal :show="showCorrectModal" @close="showCorrectModal = false">
+        <Modal :show="showCorrectModal" @close="closeCorrectModal">
             <form class="p-6" @submit.prevent="submitCorrection">
                 <h3 class="mb-4 text-lg font-semibold text-content">تصحيح نتيجة معتمدة</h3>
                 <div class="space-y-4">
@@ -208,7 +137,7 @@ function onPageChange(page: number): void {
                     <FormInput id="correct-reason" v-model="correctForm.reason" label="سبب التصحيح" required :error="errors.reason" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showCorrectModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="closeCorrectModal">
                         إلغاء
                     </button>
                     <button type="submit" :disabled="processing" class="min-h-[44px] rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">

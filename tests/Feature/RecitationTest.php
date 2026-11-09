@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\RecordRecitationAction;
+use App\DTOs\RecitationData;
 use App\Enums\RecitationType;
 use App\Models\Circle;
 use App\Models\Mosque;
@@ -125,14 +126,14 @@ test('idempotency: same idempotency_key returns the same record without duplicat
 
     $action = app(RecordRecitationAction::class);
 
-    $data = [
+    $data = RecitationData::fromArray([
         'student_id' => $student->id,
         'type' => RecitationType::New,
         'surah_number' => 1,
         'ayah_from' => 1,
         'ayah_to' => 7,
         'idempotency_key' => $idempotencyKey,
-    ];
+    ]);
 
     $first = $action->execute($data, $teacher);
     $second = $action->execute($data, $teacher);

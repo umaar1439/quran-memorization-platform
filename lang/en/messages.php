@@ -35,6 +35,15 @@ return [
         'created' => 'User added successfully.',
         'updated' => 'User updated successfully.',
         'deleted' => 'User deleted successfully.',
+        'no_organization_context' => 'A user cannot be created from an account without an organization. Use an organization account.',
+        'role_escalation_denied' => 'You cannot assign a role higher than your own: :role',
+    ],
+
+    'roles' => [
+        'updated' => 'Role permissions updated successfully.',
+        'super_admin_locked' => 'The super-admin role cannot be modified from the UI.',
+        'escalation_denied' => 'You cannot grant permissions you do not hold: :permissions',
+        'cannot_lock_self_out' => 'You cannot remove the manage-roles permission from a role you hold.',
     ],
 
     'mosques' => [

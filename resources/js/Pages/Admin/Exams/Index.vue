@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
@@ -7,19 +6,17 @@ import Modal from '@/Components/Modal.vue';
 import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { useToast } from '@/Composables/useToast';
-import { useApi } from '@/Composables/useApi';
-import type { Circle, Exam, Mosque, PaginatedResponse } from '@/Types';
+import { useExamForm } from '@/Composables/useExamForm';
+import type { ExamIndexPageProps, ExamPageModel } from '@/Types/api/exam';
 
-const props = defineProps<{
-    exams: PaginatedResponse<Exam>;
-    mosques: Pick<Mosque, 'id' | 'name'>[];
-    circles: Pick<Circle, 'id' | 'name' | 'mosque_id'>[];
-    filters: { mosque_id?: string; circle_id?: string };
-}>();
+/**
+ * العرض فقط: كل حالة النموذج/الإرسال/الأخطاء/التنبيهات في useExamForm،
+ * وكل نداء شبكة في ExamApi. لا business logic ولا axios هنا.
+ */
+const props = defineProps<ExamIndexPageProps>();
 
-const toast = useToast();
-const api = useApi();
+const { form, mosqueOptions, circleOptions, showModal, processing, errors, submit, openModal, closeModal } =
+    useExamForm(props);
 
 const statusLabels: Record<string, string> = {
     draft: 'مسودة',
@@ -37,54 +34,7 @@ const columns: DataTableColumn[] = [
     { key: 'actions', label: 'إجراءات' },
 ];
 
-const mosqueOptions = props.mosques.map((m) => ({ value: m.id, label: m.name }));
-const circleOptions = props.circles.map((c) => ({ value: c.id, label: c.name }));
-
-const showModal = ref(false);
-const processing = ref(false);
-const errors = reactive<Record<string, string>>({});
-
-const form = reactive({
-    mosque_id: '' as string | number,
-    circle_id: '' as string | number,
-    title: '',
-    exam_type: 'monthly',
-    scheduled_at: '',
-});
-
-function resetForm(): void {
-    form.mosque_id = '';
-    form.circle_id = '';
-    form.title = '';
-    form.exam_type = 'monthly';
-    form.scheduled_at = '';
-    Object.keys(errors).forEach((key) => delete errors[key]);
-}
-
-async function submit(): Promise<void> {
-    processing.value = true;
-    Object.keys(errors).forEach((key) => delete errors[key]);
-
-    try {
-        await api.post(route('exams.store'), { ...form });
-        showModal.value = false;
-        resetForm();
-        toast.success('تم إنشاء الامتحان بنجاح.');
-        router.reload({ only: ['exams'] });
-    } catch (error) {
-        const validationErrors = api.extractValidationErrors(error);
-        Object.entries(validationErrors).forEach(([key, messages]) => {
-            errors[key] = messages[0];
-        });
-
-        if (Object.keys(validationErrors).length === 0) {
-            toast.error(api.extractErrorMessage(error));
-        }
-    } finally {
-        processing.value = false;
-    }
-}
-
+// تنقّل Inertia (ترقيم الصفحات) — ليس منطق عمل، بل بناء رابط من الفلاتر الحالية.
 function onPageChange(page: number): void {
     router.get(route('admin.exams.page'), { ...props.filters, page }, { preserveState: true });
 }
@@ -100,7 +50,7 @@ function onPageChange(page: number): void {
                 <button
                     type="button"
                     class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
-                    @click="showModal = true"
+                    @click="openModal"
                 >
                     + امتحان جديد
                 </button>
@@ -118,23 +68,23 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-circle="{ row }">
-                    {{ (row as unknown as Exam).circle?.name ?? '—' }}
+                    {{ (row as unknown as ExamPageModel).circle?.name ?? '—' }}
                 </template>
                 <template #cell-scheduled_at="{ row }">
-                    {{ (row as unknown as Exam).scheduled_at ?? '—' }}
+                    {{ (row as unknown as ExamPageModel).scheduled_at ?? '—' }}
                 </template>
                 <template #cell-status="{ row }">
-                    <StatusBadge :status="(row as unknown as Exam).status" :labels="statusLabels" />
+                    <StatusBadge :status="(row as unknown as ExamPageModel).status" :labels="statusLabels" />
                 </template>
                 <template #cell-actions="{ row }">
-                    <Link :href="route('admin.exams.results', (row as unknown as Exam).id)" class="link">
+                    <Link :href="route('admin.exams.results', (row as unknown as ExamPageModel).id)" class="link">
                         عرض النتائج
                     </Link>
                 </template>
             </DataTable>
         </div>
 
-        <Modal :show="showModal" @close="showModal = false">
+        <Modal :show="showModal" @close="closeModal">
             <form class="p-6" @submit.prevent="submit">
                 <h3 class="mb-4 text-lg font-semibold text-content">إنشاء امتحان جديد</h3>
                 <div class="space-y-4">
@@ -145,7 +95,7 @@ function onPageChange(page: number): void {
                     <FormInput id="exam-scheduled" v-model="form.scheduled_at" type="datetime-local" label="تاريخ الجدولة" :error="errors.scheduled_at" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="closeModal">
                         إلغاء
                     </button>
                     <button

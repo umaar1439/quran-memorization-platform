@@ -4,31 +4,72 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\UserData;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Support\RoleHierarchy;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * إنشاء مستخدم إداري: organization_id يُسند من سياق المسؤول الحالي لا من
- * الطلب (منع Privilege Escalation)، والدور يُسند عبر Spatie بعد الحفظ.
+ * الطلب (منع Privilege Escalation)، والدور يُسند عبر Spatie بعد التحقق من
+ * رتبته مقابل رتبة المسؤول.
+ *
+ * الحقلان organization_id و status ليسا في User::$fillable ولا يمكن تمريرهما
+ * إلى create() — كانا يُمرَّران سابقاً فيُرفض الطلب في بيئة strict
+ * (MassAssignmentException). هنا يُعيَّنان صريحاً على النموذج.
+ *
+ * كل الخطوات (User + الدور + سجل التدقيق) داخل معاملة واحدة: لا مستخدم
+ * بلا دور، ولا دور بلا أثر تدقيق.
  */
 class CreateUserAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreUserRequest::validated()
-     */
-    public function execute(array $data, User $admin): User
+    public function __construct(
+        private readonly RoleHierarchy $hierarchy,
+        private readonly CreateAuditLogAction $createAuditLog,
+    ) {}
+
+    public function execute(UserData $data, User $actor, ?Request $request = null): User
     {
-        $user = User::create([
-            'organization_id' => $admin->organization_id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make((string) $data['password']),
-            'phone' => $data['phone'] ?? null,
-            'status' => $data['status'],
-        ]);
+        $organizationId = $actor->organization_id;
 
-        $user->assignRole($data['role']);
+        // لا سياق منظمة = لا يمكن تحديد مالك المستخدم الجديد؛ الرفض أوضح من
+        // إنشاء حساب بلا منظمة (يفلت من حدود المستأجر).
+        if ($organizationId === null) {
+            abort(403, __('messages.users.no_organization_context'));
+        }
 
-        return $user;
+        if (! $this->hierarchy->canAssign($actor, $data->role)) {
+            throw ValidationException::withMessages([
+                'role' => __('messages.users.role_escalation_denied', ['role' => $data->role]),
+            ]);
+        }
+
+        return DB::transaction(function () use ($data, $actor, $organizationId, $request): User {
+            $user = new User;
+            $user->fill($data->attributes());
+            $user->organization_id = $organizationId;
+            $user->status = $data->status;
+            $user->password = (string) $data->password;
+            $user->save();
+
+            $user->assignRole($data->role);
+
+            // الدور ليس عموداً على users، فلا يسجّله AuditModelChanges
+            // (user.created) — نسجّل الإسناد صراحةً لتغطية كاملة.
+            $this->createAuditLog->execute(
+                organizationId: $organizationId,
+                event: 'user.roles_synced',
+                auditableType: User::class,
+                auditableId: $user->id,
+                oldValues: ['roles' => []],
+                newValues: ['roles' => [$data->role]],
+                user: $actor,
+                request: $request,
+            );
+
+            return $user;
+        });
     }
 }

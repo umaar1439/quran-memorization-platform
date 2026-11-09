@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Enums\RecitationRating;
+use App\Enums\RecitationType;
 use App\Models\Circle;
 use App\Models\Exam;
 use App\Models\FeatureFlag;
 use App\Models\Guardian;
 use App\Models\Mosque;
 use App\Models\Organization;
+use App\Models\Recitation;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -142,6 +146,41 @@ test('the exam results page renders through the exam result query', function () 
             ->has('results.data', 0));
 });
 
+test('the admin exams page exposes the list rows and the create-form options', function () {
+    ['organization' => $org, 'roles' => $roles] = pagesOrganization();
+
+    $admin = User::factory()->create(['organization_id' => $org->id]);
+    $admin->assignRole($roles['org-admin']);
+
+    $mosque = Mosque::factory()->create(['organization_id' => $org->id]);
+    $circle = Circle::factory()->create(['organization_id' => $org->id, 'mosque_id' => $mosque->id]);
+
+    Exam::create([
+        'organization_id' => $org->id,
+        'mosque_id' => $mosque->id,
+        'circle_id' => $circle->id,
+        'title' => 'اختبار تجريبي',
+        'exam_type' => 'periodic',
+        'status' => 'draft',
+        'created_by' => $admin->id,
+    ]);
+
+    // العقد الذي يعتمد عليه useExamForm: صفوف الجدول + خيارات المسجد/الحلقة.
+    $this->actingAs($admin)
+        ->get('/admin/exams')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Exams/Index')
+            ->has('exams.data', 1)
+            ->where('exams.data.0.title', 'اختبار تجريبي')
+            ->where('exams.data.0.status', 'draft')
+            ->where('exams.data.0.circle.name', $circle->name)
+            ->has('mosques', 1)
+            ->has('circles', 1)
+            ->where('circles.0.mosque_id', $mosque->id)
+            ->has('filters'));
+});
+
 test('the teacher my-circle page lists only the circles of the current teacher', function () {
     ['organization' => $org, 'roles' => $roles] = pagesOrganization();
 
@@ -229,4 +268,48 @@ test('the student goals and exams pages render the current student data', functi
         ->assertInertia(fn (Assert $page) => $page
             ->component('Student/Exams')
             ->has('results.data', 0));
+});
+
+test('the quick recitation page keeps its props after moving the form logic to a view model', function () {
+    ['organization' => $org, 'roles' => $roles] = pagesOrganization();
+
+    $mosque = Mosque::factory()->create(['organization_id' => $org->id]);
+    $circle = Circle::factory()->create(['organization_id' => $org->id, 'mosque_id' => $mosque->id]);
+
+    $teacher = User::factory()->create(['organization_id' => $org->id]);
+    $teacher->assignRole($roles['teacher']);
+    $circle->update(['teacher_id' => $teacher->id]);
+
+    $student = StudentProfile::factory()->create([
+        'organization_id' => $org->id,
+        'mosque_id' => $mosque->id,
+        'circle_id' => $circle->id,
+    ]);
+
+    Recitation::factory()->create([
+        'organization_id' => $org->id,
+        'student_id' => $student->id,
+        'teacher_id' => $teacher->id,
+        'mosque_id' => $mosque->id,
+        'circle_id' => $circle->id,
+        'type' => RecitationType::New,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'rating' => RecitationRating::Excellent,
+        'notes' => 'حافظ',
+        'performed_at' => now(),
+        'idempotency_key' => (string) Str::uuid(),
+    ]);
+
+    $this->actingAs($teacher)
+        ->get('/teacher/quick-recitation')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Teacher/QuickRecitation')
+            ->has('students', 1)
+            ->where('students.0.id', $student->id)
+            ->has('recentRecitations', 1)
+            ->where('recentRecitations.0.surah_number', 1)
+            ->where('recentRecitations.0.teacher_id', $teacher->id));
 });

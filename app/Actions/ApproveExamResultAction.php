@@ -12,6 +12,10 @@ use App\Notifications\ExamResultNotification;
 /**
  * اعتماد نتيجة امتحان (قفل نهائي): status=approved + approved_by/at،
  * ثم إشعار الطالب. إعادة الاعتماد لا تُغيّر شيئاً (Idempotent).
+ *
+ * لا معاملة (transaction) هنا لأن العملية كتابة واحدة ذرّية؛ والإشعار
+ * (ShouldQueue) يُدفَع بعد نجاح الكتابة مباشرةً، فلا يمكن إشعار الطالب
+ * باعتماد لم يُحفظ.
  */
 class ApproveExamResultAction
 {

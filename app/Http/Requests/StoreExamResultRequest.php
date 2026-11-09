@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\ExamResultData;
+use App\Enums\ExamResultStatus;
 use App\Models\ExamResult;
 use App\Models\ExamSection;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -46,8 +48,21 @@ class StoreExamResultRequest extends FormRequest
             ],
             'score' => ['required', 'integer', 'min:0'],
             'grade' => ['nullable', 'string', 'max:50'],
-            'status' => ['required', Rule::in(['draft', 'submitted'])],
+            // القيمتان المسموحتان فقط عند التسجيل: الاعتماد يمر عبر action مستقل
+            // (ApproveExamResultAction)، فلا يمكن تجاوز approved_by/approved_at.
+            'status' => ['required', Rule::in([
+                ExamResultStatus::Draft->value,
+                ExamResultStatus::Submitted->value,
+            ])],
         ];
+    }
+
+    /**
+     * DTO مكتوب الأنواع — لا يستقبل الـ Action مصفوفة حرّة.
+     */
+    public function toData(): ExamResultData
+    {
+        return ExamResultData::fromArray($this->validated());
     }
 
     public function withValidator($validator): void

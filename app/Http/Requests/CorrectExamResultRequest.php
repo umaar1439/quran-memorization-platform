@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\ExamCorrectionData;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -29,5 +30,13 @@ class CorrectExamResultRequest extends FormRequest
             'grade' => ['nullable', 'string', 'max:50'],
             'reason' => ['required', 'string', 'max:2000'],
         ];
+    }
+
+    /**
+     * DTO مكتوب الأنواع — لا يستقبل الـ Action مصفوفة حرّة.
+     */
+    public function toData(): ExamCorrectionData
+    {
+        return ExamCorrectionData::fromArray($this->validated());
     }
 }

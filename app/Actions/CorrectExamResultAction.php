@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\ExamCorrectionData;
 use App\Enums\ExamResultStatus;
 use App\Models\ExamResult;
 use App\Models\User;
@@ -22,10 +23,7 @@ class CorrectExamResultAction
         private readonly CreateAuditLogAction $createAuditLog,
     ) {}
 
-    /**
-     * @param  array<string, mixed>  $data  بيانات مُصادَق عليها من CorrectExamResultRequest::validated()
-     */
-    public function execute(ExamResult $result, array $data, User $actor, ?Request $request = null): ExamResult
+    public function execute(ExamResult $result, ExamCorrectionData $data, User $actor, ?Request $request = null): ExamResult
     {
         if ($result->status !== ExamResultStatus::Approved) {
             throw ValidationException::withMessages([
@@ -45,8 +43,8 @@ class CorrectExamResultAction
                 'grade' => $result->grade,
             ];
 
-            $result->score = $data['score'];
-            $result->grade = $data['grade'] ?? $result->grade;
+            $result->score = $data->score;
+            $result->grade = $data->grade ?? $result->grade;
             $result->save();
 
             $this->createAuditLog->execute(
@@ -58,7 +56,7 @@ class CorrectExamResultAction
                 newValues: [
                     'score' => $result->score,
                     'grade' => $result->grade,
-                    'reason' => $data['reason'],
+                    'reason' => $data->reason,
                 ],
                 user: $actor,
                 request: $request,

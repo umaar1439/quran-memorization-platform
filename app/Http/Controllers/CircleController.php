@@ -42,6 +42,7 @@ class CircleController extends Controller
             'circles' => $this->circles->paginate(
                 $request->string('search')->toString() ?: null,
                 $request->filled('mosque_id') ? $request->integer('mosque_id') : null,
+                $request->user(),
             ),
             'mosques' => $this->mosqueOptions->all(),
             'teachers' => $this->userOptions->byRole('teacher'),

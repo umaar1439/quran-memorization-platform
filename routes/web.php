@@ -15,6 +15,7 @@ use App\Http\Controllers\ParentDashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RecitationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentDashboardController;
@@ -86,6 +87,32 @@ Route::middleware('auth')->group(function () {
     // Phase 14: سجلات التدقيق — read-only، org-admin فقط (Policy).
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
+    // Phase 15: صفحات الحلقات — التفويض هنا بالصلاحية لا بالدور.
+    // السبب: CirclePolicy::viewAny هي المصدر الوحيد للتفويض (circles.view)،
+    // وكان حصر المسار بالأدوار يعارضها ويرفض المعلم رغم امتلاكه الصلاحية
+    // برسالة مضللة "User does not have the right roles". القراءة بـ
+    // circles.view، والكتابة بـ circles.manage (نفس شرط السياسة/FormRequest).
+    Route::middleware('can:circles.view')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/circles', [CircleController::class, 'page'])->name('circles.index');
+        Route::get('/circles/{circle}', [CircleController::class, 'show'])->name('circles.show');
+    });
+
+    Route::middleware('can:circles.manage')->prefix('admin')->name('admin.')->group(function () {
+        Route::post('/circles', [CircleController::class, 'store'])->name('circles.store');
+        Route::patch('/circles/{circle}', [CircleController::class, 'update'])->name('circles.update');
+        Route::delete('/circles/{circle}', [CircleController::class, 'destroy'])->name('circles.destroy');
+    });
+
+    // إدارة الأدوار والصلاحيات — بالصلاحية لا بالدور (roles.view/roles.manage)،
+    // وRolePolicy تفرض حدود المنظمة وحماية دور super-admin.
+    Route::middleware('can:roles.view')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/roles', [RoleController::class, 'page'])->name('roles.index');
+    });
+
+    Route::middleware('can:roles.manage')->prefix('admin')->name('admin.')->group(function () {
+        Route::patch('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+    });
+
     // Phase 15: صفحات Inertia لكل الأدوار — استخدام '{controller}::page'.
     Route::middleware('role:org-admin|supervisor|super-admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'page'])->name('dashboard');
@@ -94,12 +121,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/mosques', [MosqueController::class, 'store'])->name('mosques.store');
         Route::patch('/mosques/{mosque}', [MosqueController::class, 'update'])->name('mosques.update');
         Route::delete('/mosques/{mosque}', [MosqueController::class, 'destroy'])->name('mosques.destroy');
-
-        Route::get('/circles', [CircleController::class, 'page'])->name('circles.index');
-        Route::get('/circles/{circle}', [CircleController::class, 'show'])->name('circles.show');
-        Route::post('/circles', [CircleController::class, 'store'])->name('circles.store');
-        Route::patch('/circles/{circle}', [CircleController::class, 'update'])->name('circles.update');
-        Route::delete('/circles/{circle}', [CircleController::class, 'destroy'])->name('circles.destroy');
 
         Route::get('/users', [UserController::class, 'page'])->name('users.index');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');

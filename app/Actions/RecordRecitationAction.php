@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\RecitationData;
 use App\Enums\RecitationType;
 use App\Models\Recitation;
 use App\Models\RecitationError;
@@ -36,9 +37,9 @@ class RecordRecitationAction
     ) {}
 
     /**
-     * @param  array<string, mixed>  $data  بيانات مُصادَق عليها من StoreRecitationRequest::validated()
+     * @param  RecitationData  $data  بيانات مُصادَق عليها ومكتوبة الأنواع من StoreRecitationRequest::toData()
      */
-    public function execute(array $data, User $teacher): Recitation
+    public function execute(RecitationData $data, User $teacher): Recitation
     {
         // شرط 1: المعلم مصادَق عليه.
         if (! $teacher->exists) {
@@ -55,7 +56,7 @@ class RecordRecitationAction
         }
 
         // شرط 3+4: نفس المنظمة (المعلم والطالب).
-        $student = StudentProfile::withoutGlobalScopes()->find($data['student_id']);
+        $student = StudentProfile::withoutGlobalScopes()->find($data->studentId);
 
         if (! $student) {
             throw ValidationException::withMessages([
@@ -77,7 +78,7 @@ class RecordRecitationAction
         }
 
         // شرط 8: idempotency_key موجود وصالح.
-        if (empty($data['idempotency_key'])) {
+        if ($data->idempotencyKey === '') {
             throw ValidationException::withMessages([
                 'idempotency_key' => __('messages.recitations.idempotency_required'),
             ]);
@@ -91,14 +92,14 @@ class RecordRecitationAction
                     'teacher_id' => $teacher->id,
                     'mosque_id' => $student->mosque_id,
                     'circle_id' => $student->circle_id,
-                    'type' => $data['type'],
-                    'surah_number' => $data['surah_number'],
-                    'ayah_from' => $data['ayah_from'],
-                    'ayah_to' => $data['ayah_to'],
-                    'rating' => $data['rating'] ?? null,
-                    'notes' => $data['notes'] ?? null,
-                    'performed_at' => $data['performed_at'] ?? now(),
-                    'idempotency_key' => $data['idempotency_key'],
+                    'type' => $data->type,
+                    'surah_number' => $data->surahNumber,
+                    'ayah_from' => $data->ayahFrom,
+                    'ayah_to' => $data->ayahTo,
+                    'rating' => $data->rating,
+                    'notes' => $data->notes,
+                    'performed_at' => $data->performedAt ?? now(),
+                    'idempotency_key' => $data->idempotencyKey,
                 ]);
             } catch (QueryException $exception) {
                 if (! $this->isUniqueConstraintViolation($exception)) {
@@ -109,11 +110,11 @@ class RecordRecitationAction
                 // Offline Sync، §4 تهديد #13، #14): نجاح صامت بإرجاع السجل الموجود.
                 return Recitation::withoutGlobalScopes()
                     ->where('organization_id', $student->organization_id)
-                    ->where('idempotency_key', $data['idempotency_key'])
+                    ->where('idempotency_key', $data->idempotencyKey)
                     ->firstOrFail();
             }
 
-            foreach ($data['errors'] ?? [] as $error) {
+            foreach ($data->errors as $error) {
                 RecitationError::withoutGlobalScopes()->create([
                     'recitation_id' => $recitation->id,
                     'organization_id' => $student->organization_id,
@@ -131,8 +132,8 @@ class RecordRecitationAction
             );
 
             // Auto-trigger توصية بامتحان عند اكتمال سورة (Phase 9 §3) — لا إنشاء تلقائي.
-            if ($data['type'] === RecitationType::New || $data['type'] === RecitationType::New->value) {
-                $this->recommendExamOnCompletion->execute($student, $data['surah_number']);
+            if ($data->type === RecitationType::New) {
+                $this->recommendExamOnCompletion->execute($student, $data->surahNumber);
             }
 
             return $recitation;

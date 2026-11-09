@@ -133,48 +133,6 @@ export interface StudentGoal {
     surah?: Surah;
 }
 
-export interface ExamSection {
-    id: number;
-    exam_id: number;
-    surah_number?: number | null;
-    ayah_from?: number | null;
-    ayah_to?: number | null;
-    section_type: string;
-    max_score: number;
-}
-
-export interface Exam {
-    id: number;
-    organization_id: number;
-    mosque_id?: number | null;
-    circle_id?: number | null;
-    title: string;
-    exam_type: string;
-    scheduled_at?: string | null;
-    status: string;
-    created_by?: number;
-    sections?: ExamSection[];
-    results?: ExamResult[];
-    mosque?: Mosque;
-    circle?: Circle;
-}
-
-export interface ExamResult {
-    id: number;
-    exam_id: number;
-    exam_section_id: number;
-    student_id: number;
-    organization_id: number;
-    score: number;
-    grade?: string | null;
-    examiner_id: number;
-    status: string;
-    approved_by?: number | null;
-    approved_at?: string | null;
-    exam?: Exam;
-    student?: StudentProfile;
-}
-
 export interface Certificate {
     id: string;
     organization_id: number;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\ExamSubmissionData;
 use App\Enums\ExamStatus;
 use App\Models\Exam;
 use App\Models\ExamSection;
@@ -16,31 +17,28 @@ use Illuminate\Support\Facades\DB;
  */
 class CreateExamAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreExamRequest::validated()
-     */
-    public function execute(array $data, User $actor): Exam
+    public function execute(ExamSubmissionData $data, User $actor): Exam
     {
         return DB::transaction(function () use ($data, $actor): Exam {
             $exam = Exam::create([
-                'mosque_id' => $data['mosque_id'] ?? null,
-                'circle_id' => $data['circle_id'] ?? null,
-                'title' => $data['title'],
-                'exam_type' => $data['exam_type'],
-                'scheduled_at' => $data['scheduled_at'] ?? null,
+                'mosque_id' => $data->mosqueId,
+                'circle_id' => $data->circleId,
+                'title' => $data->title,
+                'exam_type' => $data->examType,
+                'scheduled_at' => $data->scheduledAt,
                 'status' => ExamStatus::Draft,
                 'created_by' => $actor->id,
             ]);
 
-            foreach ($data['sections'] ?? [] as $section) {
+            foreach ($data->sections as $section) {
                 ExamSection::withoutGlobalScopes()->create([
                     'exam_id' => $exam->id,
                     'organization_id' => $exam->organization_id,
-                    'surah_number' => $section['surah_number'],
-                    'ayah_from' => $section['ayah_from'],
-                    'ayah_to' => $section['ayah_to'],
-                    'section_type' => $section['section_type'],
-                    'max_score' => $section['max_score'],
+                    'surah_number' => $section->surahNumber,
+                    'ayah_from' => $section->ayahFrom,
+                    'ayah_to' => $section->ayahTo,
+                    'section_type' => $section->sectionType,
+                    'max_score' => $section->maxScore,
                 ]);
             }
 

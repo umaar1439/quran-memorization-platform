@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\ExamResultData;
 use App\Models\ExamResult;
 use App\Models\User;
 
@@ -13,19 +14,16 @@ use App\Models\User;
  */
 class CreateExamResultAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من StoreExamResultRequest::validated()
-     */
-    public function execute(array $data, User $examiner): ExamResult
+    public function execute(ExamResultData $data, User $examiner): ExamResult
     {
         return ExamResult::create([
-            'exam_id' => $data['exam_id'],
-            'exam_section_id' => $data['exam_section_id'],
-            'student_id' => $data['student_id'],
-            'score' => $data['score'],
-            'grade' => $data['grade'] ?? null,
+            'exam_id' => $data->examId,
+            'exam_section_id' => $data->examSectionId,
+            'student_id' => $data->studentId,
+            'score' => $data->score,
+            'grade' => $data->grade,
             'examiner_id' => $examiner->id,
-            'status' => $data['status'],
+            'status' => $data->status,
         ]);
     }
 }

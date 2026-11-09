@@ -24,7 +24,9 @@ class ExamSectionResource extends JsonResource
             'surah_number' => $this->surah_number,
             'ayah_from' => $this->ayah_from,
             'ayah_to' => $this->ayah_to,
-            'section_type' => $this->section_type,
+            // القيمة النصية للـ enum (مطابقة لنمط ExamResource::status) حتى لا
+            // يعتمد العقد الأمامي على تسلسل الأداة لِـ BackedEnum.
+            'section_type' => $this->section_type?->value ?? $this->section_type,
             'max_score' => $this->max_score,
         ];
     }

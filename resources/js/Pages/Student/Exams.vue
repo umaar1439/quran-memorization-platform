@@ -4,11 +4,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import type { PaginatedResponse, ExamResult } from '@/Types';
+import type { ExamResultPageModel, StudentExamsPageProps } from '@/Types/api/exam';
 
-const props = defineProps<{
-    results: PaginatedResponse<ExamResult>;
-}>();
+const props = defineProps<StudentExamsPageProps>();
 
 const statusLabels: Record<string, string> = {
     draft: 'مسودة',
@@ -19,7 +17,7 @@ const statusLabels: Record<string, string> = {
 interface ResultRow {
     id: number;
     exam_title: string;
-    score: number;
+    score: number | null;
     grade: string;
     status: string;
 }
@@ -31,8 +29,9 @@ const columns: DataTableColumn[] = [
     { key: 'status', label: 'الحالة' },
 ];
 
+// تجهيز الصفوف للعرض فقط (اختيار الأعمدة المعروضة) — لا منطق عمل ولا شبكة.
 const rows = computed(() =>
-    props.results.data.map((result) => ({
+    props.results.data.map((result: ExamResultPageModel) => ({
         id: result.id,
         exam_title: result.exam?.title ?? '—',
         score: result.score,

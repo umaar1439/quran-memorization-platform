@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\ExamSubmissionData;
+use App\Enums\ExamSectionType;
 use App\Models\Exam;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,8 +47,17 @@ class StoreExamRequest extends FormRequest
             'sections.*.surah_number' => ['required_with:sections', 'integer', 'min:1', 'max:114'],
             'sections.*.ayah_from' => ['required_with:sections', 'integer', 'min:1'],
             'sections.*.ayah_to' => ['required_with:sections', 'integer', 'min:1'],
-            'sections.*.section_type' => ['required_with:sections', 'string'],
+            'sections.*.section_type' => ['required_with:sections', Rule::enum(ExamSectionType::class)],
             'sections.*.max_score' => ['required_with:sections', 'integer', 'min:1'],
         ];
+    }
+
+    /**
+     * يحوّل البيانات المُصادَق عليها إلى DTO مكتوب الأنواع، فلا يستقبل الـ Action
+     * مصفوفة حرّة بعد الآن (نفس نمط TeacherData/StudentData/RecitationData).
+     */
+    public function toData(): ExamSubmissionData
+    {
+        return ExamSubmissionData::fromArray($this->validated());
     }
 }

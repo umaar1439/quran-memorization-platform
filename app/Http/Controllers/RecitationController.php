@@ -32,7 +32,7 @@ class RecitationController extends Controller
     public function store(StoreRecitationRequest $request): JsonResponse
     {
         $recitation = $this->recordRecitation->execute(
-            $request->validated(),
+            $request->toData(),
             $request->user(),
         );
 

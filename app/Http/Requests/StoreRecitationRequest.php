@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\RecitationData;
 use App\Enums\RecitationRating;
 use App\Enums\RecitationType;
 use App\Models\Recitation;
@@ -49,5 +50,14 @@ class StoreRecitationRequest extends FormRequest
             'performed_at' => ['nullable', 'date'],
             'idempotency_key' => ['required', 'uuid'],
         ];
+    }
+
+    /**
+     * يحوّل البيانات المُصادَق عليها إلى DTO مكتوب الأنواع، فلا يستقبل الـ Action
+     * مصفوفة حرّة بعد الآن (نفس نمط TeacherData/StudentData).
+     */
+    public function toData(): RecitationData
+    {
+        return RecitationData::fromArray($this->validated());
     }
 }

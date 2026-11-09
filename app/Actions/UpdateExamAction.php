@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions;
 
+use App\DTOs\ExamUpdateData;
 use App\Models\Exam;
 
 /**
@@ -12,12 +13,13 @@ use App\Models\Exam;
  */
 class UpdateExamAction
 {
-    /**
-     * @param  array<string, mixed>  $data  بيانات مصادَق عليها من UpdateExamRequest::validated()
-     */
-    public function execute(Exam $exam, array $data): Exam
+    public function execute(Exam $exam, ExamUpdateData $data): Exam
     {
-        $exam->update($data);
+        $attributes = $data->attributes();
+
+        if ($attributes !== []) {
+            $exam->update($attributes);
+        }
 
         return $exam;
     }

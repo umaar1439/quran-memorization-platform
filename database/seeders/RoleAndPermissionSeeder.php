@@ -19,6 +19,11 @@ class RoleAndPermissionSeeder extends Seeder
      */
     public const PERMISSIONS = [
         'users.view', 'users.create', 'users.update', 'users.delete',
+
+        // إدارة الأدوار والصلاحيات (شاشة /admin/roles) — منفصلة عن users.*
+        // حتى يمكن منح «تعديل الصلاحيات» لمن لا يدير المستخدمين.
+        'roles.view', 'roles.manage',
+
         'teachers.view', 'teachers.create', 'teachers.update', 'teachers.delete',
         'circles.view', 'circles.manage',
         'students.view', 'students.manage', 'students.transfer',

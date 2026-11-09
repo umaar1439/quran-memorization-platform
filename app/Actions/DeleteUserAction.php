@@ -7,8 +7,11 @@ namespace App\Actions;
 use App\Models\User;
 
 /**
- * حذف مستخدم إداري (Soft Delete) — التفويض يحدث في الـ Controller عبر
- * UserPolicy قبل الوصول إلى هذه الخطوة.
+ * حذف مستخدم إداري (Soft Delete) — كتابة واحدة، لذا لا معاملة ولا تدقيق
+ * يدوي: AuditModelChanges يسجّل user.deleted تلقائياً.
+ *
+ * التفويض (users.delete + نفس المنظمة + منع حذف النفس + حماية super-admin
+ * وذوي الرتبة الأعلى/المساوية) يحدث في UserPolicy قبل الوصول إلى هنا.
  */
 class DeleteUserAction
 {

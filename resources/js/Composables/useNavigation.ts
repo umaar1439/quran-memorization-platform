@@ -13,6 +13,8 @@ export interface NavItem {
     label: string;
     routeName: string;
     icon: IconName;
+    /** صلاحية مطلوبة لعرض العنصر — تمنع ظهور رابط يقود إلى 403 بعد سحب الصلاحية. */
+    permission?: string;
 }
 
 const adminNav: NavItem[] = [
@@ -22,6 +24,7 @@ const adminNav: NavItem[] = [
     { label: 'المعلمون', routeName: 'admin.teachers.index', icon: 'user-check' },
     { label: 'الطلاب', routeName: 'admin.students.index', icon: 'graduation-cap' },
     { label: 'المستخدمون', routeName: 'admin.users.index', icon: 'users' },
+    { label: 'الأدوار والصلاحيات', routeName: 'admin.roles.index', icon: 'shield-check', permission: 'roles.view' },
     { label: 'الإعدادات', routeName: 'admin.settings.index', icon: 'settings' },
     { label: 'Feature Flags', routeName: 'admin.feature-flags.index', icon: 'flag' },
     { label: 'التقارير', routeName: 'admin.reports.page', icon: 'chart' },
@@ -57,31 +60,27 @@ export function useNavigation() {
     const page = usePage<PageProps>();
 
     const roles = computed<string[]>(() => page.props.auth.roles ?? []);
+    const permissions = computed<string[]>(() => page.props.auth.permissions ?? []);
 
     const items = computed<NavItem[]>(() => {
         const has = (role: string): boolean => roles.value.includes(role);
 
+        let source: NavItem[] = [];
+
         if (has('org-admin') || has('super-admin')) {
-            return adminNav;
+            source = adminNav;
+        } else if (has('supervisor')) {
+            source = supervisorNav;
+        } else if (has('teacher')) {
+            source = teacherNav;
+        } else if (has('student')) {
+            source = studentNav;
+        } else if (has('parent')) {
+            source = parentNav;
         }
 
-        if (has('supervisor')) {
-            return supervisorNav;
-        }
-
-        if (has('teacher')) {
-            return teacherNav;
-        }
-
-        if (has('student')) {
-            return studentNav;
-        }
-
-        if (has('parent')) {
-            return parentNav;
-        }
-
-        return [];
+        // العناصر التي تشترط صلاحية لا تظهر بعد سحبها (بدل رابط ينتهي بـ 403).
+        return source.filter((item) => !item.permission || permissions.value.includes(item.permission));
     });
 
     function isActive(routeName: string): boolean {

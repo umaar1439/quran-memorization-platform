@@ -13,8 +13,10 @@ use App\Models\Mosque;
 use App\Models\Organization;
 use App\Models\StudentProfile;
 use App\Models\User;
+use App\Notifications\ExamResultNotification;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -201,6 +203,117 @@ test('correction workflow updates score and creates an audit log with old and ne
     expect($auditLog->old_values['score'])->toBe(70);
     expect($auditLog->new_values['score'])->toBe(85);
     expect($auditLog->new_values['reason'])->toBe('خطأ في تسجيل الدرجة الأصلية');
+});
+
+test('creating an exam with an unsupported section type is rejected and nothing is persisted', function () {
+    $org = Organization::factory()->create();
+    $roles = seedRolesForExam($org->id);
+
+    $supervisor = User::factory()->create(['organization_id' => $org->id]);
+    $supervisor->assignRole($roles['supervisor']);
+
+    $this->actingAs($supervisor);
+
+    $response = $this->postJson('/exams', [
+        'title' => 'امتحان',
+        'exam_type' => 'oral',
+        'sections' => [
+            ['surah_number' => 1, 'ayah_from' => 1, 'ayah_to' => 7, 'section_type' => 'writing', 'max_score' => 100],
+        ],
+    ]);
+
+    $response->assertStatus(422)->assertJsonValidationErrors('sections.0.section_type');
+
+    // لا امتحان ولا قسم: التحقق يسبق المعاملة، فلا شيء يُحفظ جزئياً.
+    expect(Exam::withoutGlobalScopes()->count())->toBe(0)
+        ->and(ExamSection::withoutGlobalScopes()->count())->toBe(0);
+});
+
+test('updating an exam writes only the submitted fields and can clear the schedule explicitly', function () {
+    $org = Organization::factory()->create();
+    $roles = seedRolesForExam($org->id);
+
+    $supervisor = User::factory()->create(['organization_id' => $org->id]);
+    $supervisor->assignRole($roles['supervisor']);
+
+    $exam = Exam::withoutGlobalScopes()->create([
+        'organization_id' => $org->id,
+        'title' => 'الاسم القديم',
+        'exam_type' => 'oral',
+        'scheduled_at' => '2026-01-05 09:00:00',
+        'status' => ExamStatus::Draft,
+        'created_by' => $supervisor->id,
+    ]);
+
+    $this->actingAs($supervisor);
+
+    $this->patchJson("/exams/{$exam->id}", ['title' => 'الاسم الجديد'])->assertOk();
+
+    $exam->refresh();
+    expect($exam->title)->toBe('الاسم الجديد')
+        ->and($exam->exam_type)->toBe('oral')
+        ->and($exam->scheduled_at?->toDateTimeString())->toBe('2026-01-05 09:00:00');
+
+    // null صريح يمسح التاريخ — بخلاف غياب الحقل الذي يُبقيه.
+    $this->patchJson("/exams/{$exam->id}", ['scheduled_at' => null])->assertOk();
+
+    expect($exam->refresh()->scheduled_at)->toBeNull()
+        ->and($exam->title)->toBe('الاسم الجديد');
+});
+
+test('approving a result notifies the student once and stays idempotent on retry', function () {
+    Notification::fake();
+
+    $org = Organization::factory()->create();
+    $roles = seedRolesForExam($org->id);
+
+    $mosque = Mosque::factory()->create(['organization_id' => $org->id]);
+    $student = StudentProfile::factory()->create([
+        'organization_id' => $org->id,
+        'mosque_id' => $mosque->id,
+    ]);
+
+    $orgAdmin = User::factory()->create(['organization_id' => $org->id]);
+    $orgAdmin->assignRole($roles['org-admin']);
+
+    $exam = Exam::withoutGlobalScopes()->create([
+        'organization_id' => $org->id,
+        'mosque_id' => $mosque->id,
+        'title' => 'امتحان',
+        'exam_type' => 'oral',
+        'status' => ExamStatus::Completed,
+        'created_by' => $orgAdmin->id,
+    ]);
+
+    $section = ExamSection::withoutGlobalScopes()->create([
+        'organization_id' => $org->id,
+        'exam_id' => $exam->id,
+        'surah_number' => 1,
+        'ayah_from' => 1,
+        'ayah_to' => 7,
+        'section_type' => 'recitation',
+        'max_score' => 100,
+    ]);
+
+    $result = ExamResult::withoutGlobalScopes()->create([
+        'organization_id' => $org->id,
+        'exam_id' => $exam->id,
+        'exam_section_id' => $section->id,
+        'student_id' => $student->id,
+        'score' => 90,
+        'grade' => 'ممتاز',
+        'examiner_id' => $orgAdmin->id,
+        'status' => ExamResultStatus::Submitted,
+    ]);
+
+    $this->actingAs($orgAdmin);
+
+    $this->postJson("/exam-results/{$result->id}/approve")->assertOk();
+    $this->postJson("/exam-results/{$result->id}/approve")->assertOk();
+
+    expect($result->refresh()->status)->toBe(ExamResultStatus::Approved);
+
+    Notification::assertSentToTimes($student->user, ExamResultNotification::class, 1);
 });
 
 test('correction workflow rejects correction on a non-approved result', function () {

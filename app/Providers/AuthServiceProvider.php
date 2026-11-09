@@ -29,6 +29,7 @@ use App\Policies\FeatureFlagPolicy;
 use App\Policies\MosquePolicy;
 use App\Policies\RecitationPolicy;
 use App\Policies\ReportPolicy;
+use App\Policies\RolePolicy;
 use App\Policies\SettingPolicy;
 use App\Policies\StudentGoalPolicy;
 use App\Policies\StudentProfilePolicy;
@@ -38,6 +39,7 @@ use App\Policies\TeacherProfilePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
 
 /**
  * تسجيل Policy لكل Model رئيسي (Phase 3 — التخويل وعزل المستأجرين).
@@ -65,6 +67,7 @@ class AuthServiceProvider extends ServiceProvider
         AuditLog::class => AuditLogPolicy::class,
         StudentGoal::class => StudentGoalPolicy::class,
         User::class => UserPolicy::class,
+        Role::class => RolePolicy::class,
     ];
 
     public function boot(): void

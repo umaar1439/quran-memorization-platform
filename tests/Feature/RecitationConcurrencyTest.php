@@ -122,6 +122,7 @@ function concurrencyWorkerScript(): string
 <?php
 
 use App\Actions\RecordRecitationAction;
+use App\DTOs\RecitationData;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -146,14 +147,14 @@ app(PermissionRegistrar::class)->setPermissionsTeamId((int) $orgId);
 Auth::login($teacher);
 
 try {
-    $recitation = app(RecordRecitationAction::class)->execute([
+    $recitation = app(RecordRecitationAction::class)->execute(RecitationData::fromArray([
         'student_id' => (int) $studentId,
         'type' => 'new',
         'surah_number' => 2,
         'ayah_from' => 1,
         'ayah_to' => 5,
         'idempotency_key' => $key,
-    ], $teacher);
+    ]), $teacher);
 
     echo 'OK:'.$recitation->id;
     exit(0);

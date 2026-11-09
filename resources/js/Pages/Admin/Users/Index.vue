@@ -1,35 +1,41 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import DataTable, { type DataTableColumn } from '@/Components/DataTable.vue';
 import Modal from '@/Components/Modal.vue';
 import ConfirmDialog from '@/Components/ConfirmDialog.vue';
 import FormInput from '@/Components/FormInput.vue';
 import FormSelect from '@/Components/FormSelect.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { useToast } from '@/Composables/useToast';
-import type { PaginatedResponse, User } from '@/Types';
+import { useUserManagement } from '@/Composables/useUserManagement';
+import type { UserIndexPageProps, UserPageModel } from '@/Types/api/user';
 
-interface UserRow extends User {
-    roles?: { name: string }[];
-}
+/**
+ * العرض فقط: كل الحالة والمنطق في useUserManagement، وكل نداء شبكة في
+ * UserApi. لا useForm ولا router للكتابة هنا.
+ */
+const props = defineProps<UserIndexPageProps>();
 
-const props = defineProps<{
-    users: PaginatedResponse<UserRow>;
-    filters: { search?: string; role?: string };
-    availableRoles: string[];
-}>();
-
-const toast = useToast();
-
-const roleLabels: Record<string, string> = {
-    'org-admin': 'مدير المنظمة',
-    supervisor: 'مشرف',
-    teacher: 'معلم',
-    student: 'طالب',
-    parent: 'ولي أمر',
-};
+const {
+    form,
+    errors,
+    processing,
+    roleOptions,
+    statusOptions,
+    showModal,
+    editingUser,
+    showDeleteConfirm,
+    roleLabel,
+    openCreateModal,
+    openEditModal,
+    closeModal,
+    submit,
+    confirmDelete,
+    cancelDelete,
+    deleteUser,
+    onSearch,
+    onPageChange,
+} = useUserManagement(props);
 
 const columns: DataTableColumn[] = [
     { key: 'name', label: 'الاسم' },
@@ -38,87 +44,6 @@ const columns: DataTableColumn[] = [
     { key: 'status', label: 'الحالة' },
     { key: 'actions', label: 'إجراءات' },
 ];
-
-const statusOptions = [
-    { value: 'active', label: 'نشط' },
-    { value: 'inactive', label: 'غير نشط' },
-    { value: 'suspended', label: 'موقوف' },
-];
-
-const roleOptions = props.availableRoles.map((role) => ({ value: role, label: roleLabels[role] ?? role }));
-
-const showModal = ref(false);
-const editingUser = ref<UserRow | null>(null);
-const showDeleteConfirm = ref(false);
-const userToDelete = ref<UserRow | null>(null);
-
-const form = useForm({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    role: '',
-    status: 'active',
-});
-
-function openCreateModal(): void {
-    editingUser.value = null;
-    form.reset();
-    showModal.value = true;
-}
-
-function openEditModal(user: UserRow): void {
-    editingUser.value = user;
-    form.name = user.name;
-    form.email = user.email;
-    form.password = '';
-    form.phone = user.phone ?? '';
-    form.role = user.roles?.[0]?.name ?? '';
-    form.status = user.status ?? 'active';
-    showModal.value = true;
-}
-
-function submit(): void {
-    if (editingUser.value) {
-        form.patch(route('admin.users.update', editingUser.value.id), {
-            onSuccess: () => {
-                showModal.value = false;
-                toast.success('تم تحديث بيانات المستخدم بنجاح.');
-            },
-        });
-    } else {
-        form.post(route('admin.users.store'), {
-            onSuccess: () => {
-                showModal.value = false;
-                toast.success('تم إضافة المستخدم بنجاح.');
-            },
-        });
-    }
-}
-
-function confirmDelete(user: UserRow): void {
-    userToDelete.value = user;
-    showDeleteConfirm.value = true;
-}
-
-function deleteUser(): void {
-    if (!userToDelete.value) return;
-
-    router.delete(route('admin.users.destroy', userToDelete.value.id), {
-        onSuccess: () => {
-            showDeleteConfirm.value = false;
-            toast.success('تم حذف المستخدم بنجاح.');
-        },
-    });
-}
-
-function onSearch(value: string): void {
-    router.get(route('admin.users.index'), { ...props.filters, search: value }, { preserveState: true, replace: true });
-}
-
-function onPageChange(page: number): void {
-    router.get(route('admin.users.index'), { ...props.filters, page }, { preserveState: true });
-}
 </script>
 
 <template>
@@ -149,17 +74,17 @@ function onPageChange(page: number): void {
                 @update:page="onPageChange"
             >
                 <template #cell-roles="{ row }">
-                    {{ roleLabels[(row as unknown as UserRow).roles?.[0]?.name ?? ''] ?? '—' }}
+                    {{ roleLabel((row as unknown as UserPageModel).roles[0]?.name) }}
                 </template>
                 <template #cell-status="{ row }">
-                    <StatusBadge :status="(row as unknown as UserRow).status ?? 'active'" />
+                    <StatusBadge :status="(row as unknown as UserPageModel).status ?? 'active'" />
                 </template>
                 <template #cell-actions="{ row }">
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                        <button type="button" class="link" @click="openEditModal(row as unknown as UserRow)">
+                        <button type="button" class="link" @click="openEditModal(row as unknown as UserPageModel)">
                             تعديل
                         </button>
-                        <button type="button" class="link-danger" @click="confirmDelete(row as unknown as UserRow)">
+                        <button type="button" class="link-danger" @click="confirmDelete(row as unknown as UserPageModel)">
                             حذف
                         </button>
                     </div>
@@ -167,33 +92,33 @@ function onPageChange(page: number): void {
             </DataTable>
         </div>
 
-        <Modal :show="showModal" @close="showModal = false">
+        <Modal :show="showModal" @close="closeModal()">
             <form class="p-6" @submit.prevent="submit">
                 <h3 class="mb-4 text-lg font-semibold text-content">
                     {{ editingUser ? 'تعديل مستخدم' : 'إضافة مستخدم جديد' }}
                 </h3>
                 <div class="space-y-4">
-                    <FormInput id="user-name" v-model="form.name" label="الاسم" required :error="form.errors.name" />
-                    <FormInput id="user-email" v-model="form.email" type="email" label="البريد الإلكتروني" required :error="form.errors.email" />
+                    <FormInput id="user-name" v-model="form.name" label="الاسم" required :error="errors.name" />
+                    <FormInput id="user-email" v-model="form.email" type="email" label="البريد الإلكتروني" required :error="errors.email" />
                     <FormInput
                         id="user-password"
                         v-model="form.password"
                         type="password"
                         :label="editingUser ? 'كلمة المرور (اتركها فارغة لعدم التغيير)' : 'كلمة المرور'"
                         :required="!editingUser"
-                        :error="form.errors.password"
+                        :error="errors.password"
                     />
-                    <FormInput id="user-phone" v-model="form.phone" label="الهاتف" :error="form.errors.phone" />
-                    <FormSelect id="user-role" v-model="form.role" label="الدور" :options="roleOptions" required :error="form.errors.role" />
-                    <FormSelect id="user-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="form.errors.status" />
+                    <FormInput id="user-phone" v-model="form.phone" label="الهاتف" :error="errors.phone" />
+                    <FormSelect id="user-role" v-model="form.role" label="الدور" :options="roleOptions" required :error="errors.role" />
+                    <FormSelect id="user-status" v-model="form.status" label="الحالة" :options="statusOptions" required :error="errors.status" />
                 </div>
                 <div class="mt-6 flex justify-end gap-3">
-                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="showModal = false">
+                    <button type="button" class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-secondary px-4 text-sm font-medium transition duration-150 ease-standard" @click="closeModal()">
                         إلغاء
                     </button>
                     <button
                         type="submit"
-                        :disabled="form.processing"
+                        :disabled="processing"
                         class="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-lg btn-primary px-4 text-sm font-semibold transition duration-150 ease-standard"
                     >
                         حفظ
@@ -208,7 +133,7 @@ function onPageChange(page: number): void {
             message="هل أنت متأكد من حذف هذا المستخدم؟"
             danger
             @confirm="deleteUser"
-            @cancel="showDeleteConfirm = false"
+            @cancel="cancelDelete()"
         />
     </AuthenticatedLayout>
 </template>

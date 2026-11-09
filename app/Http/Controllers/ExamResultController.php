@@ -36,7 +36,7 @@ class ExamResultController extends Controller
     public function store(StoreExamResultRequest $request): JsonResponse
     {
         $result = $this->createExamResult->execute(
-            $request->validated(),
+            $request->toData(),
             $request->user(),
         );
 
@@ -56,7 +56,7 @@ class ExamResultController extends Controller
     {
         $result = $this->correctExamResult->execute(
             $examResult,
-            $request->validated(),
+            $request->toData(),
             $request->user(),
             $request,
         );

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\DTOs\ExamUpdateData;
 use App\Enums\ExamStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,5 +32,13 @@ class UpdateExamRequest extends FormRequest
             'scheduled_at' => ['nullable', 'date'],
             'status' => ['sometimes', Rule::enum(ExamStatus::class)],
         ];
+    }
+
+    /**
+     * DTO جزئي: الحقول الغائبة تبقى كما هي، و`scheduled_at=null` صريح يمسحها.
+     */
+    public function toData(): ExamUpdateData
+    {
+        return ExamUpdateData::fromArray($this->validated());
     }
 }

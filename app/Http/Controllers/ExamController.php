@@ -37,7 +37,7 @@ class ExamController extends Controller
 
     public function store(StoreExamRequest $request): JsonResponse
     {
-        $exam = $this->createExam->execute($request->validated(), $request->user());
+        $exam = $this->createExam->execute($request->toData(), $request->user());
 
         return (new ExamResource($exam->load('sections')))->response()->setStatusCode(201);
     }
@@ -63,7 +63,7 @@ class ExamController extends Controller
 
     public function update(UpdateExamRequest $request, Exam $exam): JsonResponse
     {
-        $exam = $this->updateExam->execute($exam, $request->validated());
+        $exam = $this->updateExam->execute($exam, $request->toData());
 
         return (new ExamResource($exam))->response();
     }
@@ -82,7 +82,7 @@ class ExamController extends Controller
                 $request->filled('mosque_id') ? $request->integer('mosque_id') : null,
             )->withQueryString(),
             'mosques' => $this->mosqueOptions->all(),
-            'circles' => $this->circles->options(),
+            'circles' => $this->circles->all(),
             'filters' => $request->only('circle_id', 'mosque_id'),
         ]);
     }
