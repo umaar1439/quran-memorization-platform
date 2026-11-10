@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import Toast from '@/Components/Toast.vue';
+import PwaUpdateBanner from '@/Components/PwaUpdateBanner.vue';
 import AppSidebar from '@/Layouts/Partials/AppSidebar.vue';
 import AppTopBar from '@/Layouts/Partials/AppTopBar.vue';
 import AppMobileNav from '@/Layouts/Partials/AppMobileNav.vue';
@@ -26,6 +27,7 @@ const drawerOpen = ref(false);
         </a>
 
         <Toast />
+        <PwaUpdateBanner />
         <AppSidebar />
         <AppMobileDrawer :open="drawerOpen" @close="drawerOpen = false" />
 

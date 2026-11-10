@@ -90,5 +90,17 @@ export default {
     },
 
     // دعم RTL عبر tailwindcss-rtl (لأن الإصدار المستخدم من Tailwind هو v3 عبر Breeze)
-    plugins: [forms, rtl],
+    plugins: [
+        forms,
+        rtl,
+        /*
+         * متغيّر `coarse:` = أجهزة المؤشر الخشن (اللمس: هاتف/جهاز لوحي).
+         * يُستخدم لتكبير هدف اللمس إلى 44px على هذه الأجهزة فقط، فلا تتضخّم
+         * كثافة واجهة الحاسب (فأرة) ولا ترتفع صفوف الجداول على الشاشات الكبيرة.
+         * مثال: coarse:min-h-11
+         */
+        ({ addVariant }) => {
+            addVariant('coarse', '@media (pointer: coarse)');
+        },
+    ],
 };

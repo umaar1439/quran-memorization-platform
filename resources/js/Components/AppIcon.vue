@@ -36,7 +36,8 @@ export type IconName =
     | 'plus'
     | 'logout'
     | 'arrow-start'
-    | 'sparkles';
+    | 'sparkles'
+    | 'download';
 
 withDefaults(
     defineProps<{
@@ -91,6 +92,7 @@ const paths: Record<IconName, string> = {
     logout: 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',
     'arrow-start': 'M19 12H5M12 19l-7-7 7-7',
     sparkles: 'm12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z',
+    download: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
 };
 </script>
 

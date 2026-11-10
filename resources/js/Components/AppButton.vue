@@ -9,7 +9,9 @@ import AppIcon, { type IconName } from '@/Components/AppIcon.vue';
  * - primary: إجراء رئيسي واحد لكل شاشة (تباين AA: أبيض على teal-700 = 4.66:1).
  * - secondary: إجراء ثانوي بإطار. ghost: إجراء خفيف. danger/danger-ghost: إتلافي.
  * - href: يجعل الزر رابط Inertia (نفس الشكل والسلوك البصري).
- * ارتفاع 44px كحد أدنى في الحجم md/lg للجوال؛ sm للاستخدام داخل الجداول على الحاسب.
+ * ارتفاع 44px كحد أدنى في الحجم md/lg لكل الأجهزة، وsm مضغوط بصرياً (36px) على
+ * الحاسب مع هدف لمس 44×44 على أجهزة المؤشر الخشن (coarse) — فلا تتضخّم كثافة
+ * الجداول على سطح المكتب، ولا يقلّ هدف اللمس عن 44px على الجوال (WCAG 2.5.5).
  */
 const props = withDefaults(
     defineProps<{
@@ -44,7 +46,7 @@ const variantClasses: Record<string, string> = {
 };
 
 const sizeClasses: Record<string, string> = {
-    sm: 'min-h-9 gap-1.5 px-2.5 text-sm sm:px-3',
+    sm: 'min-h-9 min-w-9 gap-1.5 px-2.5 text-sm sm:px-3 coarse:min-h-11 coarse:min-w-11',
     md: 'min-h-11 gap-2 px-4 text-sm',
     lg: 'min-h-12 gap-2 px-5 text-base',
 };

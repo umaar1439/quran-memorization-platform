@@ -84,8 +84,14 @@ function goToPage(page: number): void {
             description="لم يُسجَّل أي عنصر بعد، أو أن البحث الحالي لا يطابق شيئاً."
         />
 
-        <!-- الجوال: بطاقات (بلا تمرير أفقي) -->
-        <ul v-else class="divide-y divide-edge-soft md:hidden" :aria-label="label">
+        <!-- الجوال: بطاقات (بلا تمرير أفقي) — دخول/خروج الصفوف محرّك بـ transform/opacity -->
+        <TransitionGroup
+            v-else
+            tag="ul"
+            name="list"
+            class="divide-y divide-edge-soft md:hidden"
+            :aria-label="label"
+        >
             <li v-for="(row, index) in rows" :key="(row.id as string | number) ?? index" class="min-w-0 p-4">
                 <div class="min-w-0 break-words text-sm font-semibold text-content-strong">
                     <slot v-if="primaryColumn" :name="`cell-${primaryColumn.key}`" :row="row">
@@ -115,7 +121,7 @@ function goToPage(page: number): void {
                     <slot name="cell-actions" :row="row" />
                 </div>
             </li>
-        </ul>
+        </TransitionGroup>
 
         <!-- الحاسب: جدول -->
         <div v-if="rows.length > 0" class="hidden overflow-x-auto md:block">
@@ -129,10 +135,11 @@ function goToPage(page: number): void {
                             scope="col"
                             class="whitespace-nowrap px-4 py-3 text-start text-xs font-semibold text-content-muted"
                         >
+                            <!-- min-h 24px يحقّق WCAG 2.5.8، و44px على أجهزة اللمس فقط -->
                             <button
                                 v-if="column.sortable"
                                 type="button"
-                                class="focus-ring -mx-1 inline-flex items-center gap-1 rounded px-1 py-0.5 hover:text-content-body"
+                                class="focus-ring -mx-1 inline-flex min-h-6 items-center gap-1 rounded px-1 py-0.5 coarse:min-h-11 hover:text-content-body"
                                 @click="emit('sort', column.key)"
                             >
                                 {{ column.label }}
@@ -142,7 +149,7 @@ function goToPage(page: number): void {
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-edge-soft">
+                <TransitionGroup tag="tbody" name="list" class="divide-y divide-edge-soft">
                     <tr
                         v-for="(row, index) in rows"
                         :key="(row.id as string | number) ?? index"
@@ -163,7 +170,7 @@ function goToPage(page: number): void {
                             </slot>
                         </td>
                     </tr>
-                </tbody>
+                </TransitionGroup>
             </table>
         </div>
 

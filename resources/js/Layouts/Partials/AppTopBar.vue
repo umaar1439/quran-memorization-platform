@@ -5,6 +5,7 @@ import AppIcon from '@/Components/AppIcon.vue';
 import AppButton from '@/Components/AppButton.vue';
 import BrandMark from '@/Components/BrandMark.vue';
 import OfflineIndicator from '@/Components/OfflineIndicator.vue';
+import PwaInstallButton from '@/Components/PwaInstallButton.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 import type { PageProps } from '@/Types';
 
@@ -49,6 +50,8 @@ function logout(): void {
         </div>
 
         <div class="flex items-center gap-1 sm:gap-2">
+            <PwaInstallButton />
+
             <ThemeToggle />
 
             <OfflineIndicator />

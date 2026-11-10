@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BrandMark from '@/Components/BrandMark.vue';
+import PwaUpdateBanner from '@/Components/PwaUpdateBanner.vue';
 import ThemeToggle from '@/Components/ThemeToggle.vue';
 
 /**
@@ -14,6 +15,8 @@ import ThemeToggle from '@/Components/ThemeToggle.vue';
     <div
         class="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-teal-50 via-surface-muted to-surface-muted px-4 pb-safe pt-safe sm:px-6 dark:from-teal-500/10 dark:via-surface-muted dark:to-surface-muted"
     >
+        <PwaUpdateBanner />
+
         <main class="w-full max-w-md py-8 sm:py-10">
             <div class="mb-4 flex justify-end">
                 <ThemeToggle />

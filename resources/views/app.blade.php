@@ -6,12 +6,17 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- PWA (Phase 12: PWA والمزامنة Offline) -->
+        <!-- PWA: التثبيت والعمل دون اتصال (manifest + sw.js + صفحة offline) -->
         <link rel="manifest" href="/manifest.json">
         <!-- لون شريط المتصفح على الجوال: يحدّثه سكربت الثيم أدناه حسب اختيار المستخدم -->
         <meta name="theme-color" content="#0f766e">
-        <link rel="icon" href="/icons/icon-192.png">
-        <link rel="apple-touch-icon" href="/icons/icon-192.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="تحفيظ">
+        <link rel="icon" href="/favicon.ico" sizes="32x32">
+        <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192">
+        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
 
         <!--
             الثيم: الافتراضي نهاري، والوضع الليلي يُفعّل فقط باختيار المستخدم
@@ -39,7 +44,6 @@
 
         <!-- Fonts: IBM Plex Sans Arabic (العربية + اللاتينية) مع Figtree كاحتياطي -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
         <link
             href="https://fonts.bunny.net/css?family=figtree:400,500,600,700|ibm-plex-sans-arabic:400,500,600,700&display=swap"
             rel="stylesheet"

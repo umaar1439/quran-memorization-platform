@@ -178,6 +178,67 @@
 }
 
 /*
+ * ---------------------------------------------------------------------------
+ * View Transitions — الانتقال بين الصفحات.
+ * يُنفّذ Inertia تبديل الصفحة داخل document.startViewTransition() عند دعمه
+ * (انظر resources/js/app.ts)؛ هذه القواعد تُشكّل الشكل البصري للانتقال.
+ * القيد: opacity و transform فقط (طبقة GPU، بلا إعادة تخطيط)، وtranslateY بدل
+ * translateX ليعمل بنفس الشكل في RTL و LTR.
+ * ---------------------------------------------------------------------------
+ */
+@keyframes vt-page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes vt-page-leave {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+/* الصفحة القديمة تخرج أسرع من دخول الجديدة فلا تتراكم طبقتان مرئيتان */
+::view-transition-old(root) {
+    animation: vt-page-leave 150ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+::view-transition-new(root) {
+    animation: vt-page-enter 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+/*
+ * TransitionGroup (صفوف الجداول وقوائم البطاقات): إضافة/إزالة/إعادة ترتيب.
+ * transform + opacity فقط، وبلا position:absolute حتى لا تخرج الصفوف من تخطيط
+ * الجدول أثناء الخروج (فلا تقفز الخلايا).
+ */
+.list-move,
+.list-enter-active,
+.list-leave-active {
+    transition:
+        opacity 160ms cubic-bezier(0.2, 0, 0, 1),
+        transform 160ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+    transform: translateY(4px);
+}
+
+/*
  * احترام تفضيل "تقليل الحركة" على مستوى النظام (WCAG 2.3.3): يُعطّل الحركات
  * والانتقالات مركزياً بدل تكرار الاستثناء في كل مكوّن، ويُبقي الحالة النهائية
  * ظاهرة (لا نستخدم display:none حتى لا تختفي عناصر تعتمد على animationend).
@@ -190,5 +251,15 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    /*
+     * عناصر الانتقال الظلي (view-transition-*) ليست داخل شجرة DOM، فلا يطالها
+     * المحدِّد العام أعلاه وتحتاج تعطيلاً صريحاً.
+     */
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
     }
 }
